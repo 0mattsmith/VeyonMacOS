@@ -6,6 +6,8 @@ build_veyon_application(veyon-configurator
 	REQUIRE_ADMINISTRATOR_PRIVILEGES
 	SOURCES
 	src/AccessControlPage.cpp
+	src/AddOnsConfigurationPage.cpp
+	src/AddOnsConfigurationPage.h
 	src/AccessControlPage.h
 	src/AccessControlPage.ui
 	src/AccessControlRuleEditDialog.cpp

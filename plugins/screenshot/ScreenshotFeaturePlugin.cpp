@@ -22,6 +22,7 @@
  *
  */
 
+#include <QEventLoop>
 #include <QMessageBox>
 
 #include "ScreenshotFeaturePlugin.h"

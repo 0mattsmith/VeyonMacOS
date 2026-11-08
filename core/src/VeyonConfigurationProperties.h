@@ -89,6 +89,12 @@
 #define FOREACH_VEYON_FEATURES_CONFIG_PROPERTY(OP)				\
 	OP( VeyonConfiguration, VeyonCore::config(), QStringList, disabledFeatures, setDisabledFeatures, "DisabledFeatures", "Features", QStringList(), Configuration::Property::Flag::Standard )			\
 
+#define FOREACH_VEYON_ADDONS_CONFIG_PROPERTY(OP)				\
+	OP( VeyonConfiguration, VeyonCore::config(), QStringList, disabledAddOns, setDisabledAddOns, "DisabledAddOns", "AddOns", QStringList(), Configuration::Property::Flag::Standard )			\
+	OP( VeyonConfiguration, VeyonCore::config(), QStringList, addOnRepositories, setAddOnRepositories, "Repositories", "AddOns", QStringList(), Configuration::Property::Flag::Standard )			\
+	OP( VeyonConfiguration, VeyonCore::config(), bool, userAddOnsEnabled, setUserAddOnsEnabled, "UserAddOnsEnabled", "AddOns", true, Configuration::Property::Flag::Standard )			\
+	OP( VeyonConfiguration, VeyonCore::config(), bool, addOnStoreForTeachersEnabled, setAddOnStoreForTeachersEnabled, "StoreForTeachersEnabled", "AddOns", true, Configuration::Property::Flag::Standard )			\
+
 #define FOREACH_VEYON_LOGGING_CONFIG_PROPERTY(OP) \
 	OP( VeyonConfiguration, VeyonCore::config(), Logger::LogLevel, logLevel, setLogLevel, "LogLevel", "Logging", QVariant::fromValue(Logger::LogLevel::Default), Configuration::Property::Flag::Standard )								\
 	OP( VeyonConfiguration, VeyonCore::config(), bool, logFileSizeLimitEnabled, setLogFileSizeLimitEnabled, "LogFileSizeLimitEnabled", "Logging", false, Configuration::Property::Flag::Advanced )	\
@@ -186,6 +192,7 @@
 	FOREACH_VEYON_NETWORK_OBJECT_DIRECTORY_CONFIG_PROPERTY(OP)\
 	FOREACH_VEYON_USER_GROUPS_BACKEND_CONFIG_PROPERTY(OP)	\
 	FOREACH_VEYON_FEATURES_CONFIG_PROPERTY(OP)\
+	FOREACH_VEYON_ADDONS_CONFIG_PROPERTY(OP)\
 	FOREACH_VEYON_VNC_SERVER_CONFIG_PROPERTY(OP)		\
 	FOREACH_VEYON_NETWORK_CONFIG_PROPERTY(OP)			\
 	FOREACH_VEYON_DIRECTORIES_CONFIG_PROPERTY(OP)	\

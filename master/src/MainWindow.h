@@ -65,8 +65,15 @@ protected:
 
 private Q_SLOTS:
 	void showAboutDialog();
+	void showAddOnStore();
+	void openConfigurator();
 
 private:
+	void addAddOnStoreButton();
+#ifdef Q_OS_MACOS
+	void setupMacOSMenuBar();
+#endif
+
 	static int buttonId(const Feature& feature) // clazy:exclude=qt6-qhash-signature
 	{
 		return int(qHash(feature.uid()));

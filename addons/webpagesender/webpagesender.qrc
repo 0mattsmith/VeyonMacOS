@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="/webpagesender">
+    <file alias="webpage-send.png">resources/webpage-send.png</file>
+  </qresource>
+</RCC>

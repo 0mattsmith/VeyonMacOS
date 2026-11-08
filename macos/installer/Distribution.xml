@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<installer-gui-script minSpecVersion="2">
+	<title>Veyon @VERSION@</title>
+	<organization>io.veyon</organization>
+	<license file="license.txt"/>
+	<options customize="allow" require-scripts="true" rootVolumeOnly="true" hostArchitectures="@ARCHITECTURES@"/>
+	<domains enable_localSystem="true" enable_currentUserHome="false" enable_anywhere="false"/>
+	<volume-check>
+		<allowed-os-versions>
+			<os-version min="@MINIMUM_MACOS_VERSION@"/>
+		</allowed-os-versions>
+	</volume-check>
+	<choices-outline>
+		<line choice="io.veyon.Veyon"/>
+		<line choice="io.veyon.Veyon.service"/>
+	</choices-outline>
+	<choice id="io.veyon.Veyon" visible="true" enabled="false" selected="true"
+			title="Veyon Master and Configurator"
+			description="Veyon Master for monitoring and controlling computers, Veyon Configurator and the command line tool veyon-cli.">
+		<pkg-ref id="io.veyon.Veyon"/>
+	</choice>
+	<choice id="io.veyon.Veyon.service" visible="true" start_selected="true"
+			title="Veyon Service"
+			description="Allows this Mac to be accessed with Veyon Master according to the authentication and access control settings in Veyon Configurator. Required on teacher computers for broadcasting the screen (demo mode). Uses the built-in Screen Sharing of macOS.">
+		<pkg-ref id="io.veyon.Veyon.service"/>
+	</choice>
+	<pkg-ref id="io.veyon.Veyon" version="@VERSION@" onConclusion="none">VeyonApp.pkg</pkg-ref>
+	<pkg-ref id="io.veyon.Veyon.service" version="@VERSION@" onConclusion="none">VeyonService.pkg</pkg-ref>
+</installer-gui-script>

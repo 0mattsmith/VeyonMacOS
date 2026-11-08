@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="/taskmanager">
+    <file alias="taskmanager.png">resources/taskmanager.png</file>
+    <file alias="application-control.png">resources/application-control.png</file>
+  </qresource>
+</RCC>

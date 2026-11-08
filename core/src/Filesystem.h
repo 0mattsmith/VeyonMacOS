@@ -44,6 +44,10 @@ public:
 
 	QString serverFilePath() const;
 	QString workerFilePath() const;
+	QString cliFilePath() const;
+
+	QString addOnsDirectoryPath() const;
+	QString userAddOnsDirectoryPath() const;
 
 Q_SIGNALS:
 	void screenshotDirectoryModified();

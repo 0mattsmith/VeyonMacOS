@@ -1,10 +1,15 @@
 cmake_minimum_required(VERSION 3.18.0)
 message("Using CMake ${CMAKE_VERSION}")
 
+# macOS: Veyon supports macOS 14 (Sonoma) and newer - this has to be set before project()
+if(CMAKE_HOST_APPLE AND NOT CMAKE_OSX_DEPLOYMENT_TARGET)
+	set(CMAKE_OSX_DEPLOYMENT_TARGET "14.0" CACHE STRING "Minimum macOS version to build for")
+endif()
+
 project(veyon)
 
 option(WITH_CORE_ONLY "Build core library only" OFF)
-option(WITH_ADDONS "Build add-ons" OFF)
+option(WITH_ADDONS "Build add-ons" ON)
 option(WITH_TRANSLATIONS "Build translation files" ON)
 option(WITH_TESTS "Build tests and integrate runtime test extensions" OFF)
 option(WITH_LTO "Build with link-time optimization" ON)
@@ -17,6 +22,12 @@ option(WITH_UB_SANITIZER "Build with undefined behavior sanitizer" OFF)
 option(WITH_FUZZERS "Build LLVM fuzzer tests (implies WITH_TESTS=ON)" OFF)
 option(WITH_BUNDLED_LIBVNC "Build with bundled LibVNCServer/Client" OFF)
 option(WITH_WEBAPI "Build WebAPI plugin" ON)
+if(APPLE)
+	# Apple Clang emits a number of additional (harmless) warnings for third party headers
+	option(WITH_WERROR "Treat compiler warnings as errors" OFF)
+else()
+	option(WITH_WERROR "Treat compiler warnings as errors" ON)
+endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -108,8 +119,9 @@ if(WIN32)
 endif()
 if(APPLE)
 	set(VEYON_BUILD_APPLE 1)
+	set(VEYON_BUILD_MACOS 1)
 endif()
-if(UNIX AND NOT ANDROID)
+if(UNIX AND NOT ANDROID AND NOT APPLE)
 	set(VEYON_BUILD_LINUX 1)
 endif()
 if(ANDROID)
@@ -124,6 +136,22 @@ if(VEYON_BUILD_ANDROID)
 	set(VEYON_INSTALL_DATA_DIR "${CMAKE_INSTALL_DATADIR}/veyon")
 	set(VEYON_PLUGIN_DIR "")
 	set(VEYON_TRANSLATIONS_DIR "/translations")
+	set(VEYON_INSTALL_BIN_DIR "bin")
+elseif(VEYON_BUILD_MACOS)
+	# everything is installed into a self-contained application bundle:
+	# Veyon.app/Contents/{MacOS,Frameworks,PlugIns/veyon,Resources}
+	set(VEYON_MACOS_BUNDLE_NAME "Veyon.app")
+	set(VEYON_MACOS_BUNDLE_CONTENTS_DIR "${VEYON_MACOS_BUNDLE_NAME}/Contents")
+	set(VEYON_LIB_DIR "${VEYON_MACOS_BUNDLE_CONTENTS_DIR}/Frameworks" CACHE INTERNAL "Veyon library directory")
+	set(VEYON_INSTALL_BIN_DIR "${VEYON_MACOS_BUNDLE_CONTENTS_DIR}/MacOS")
+	set(VEYON_INSTALL_PLUGIN_DIR "${VEYON_MACOS_BUNDLE_CONTENTS_DIR}/PlugIns/veyon")
+	set(VEYON_INSTALL_DATA_DIR "${VEYON_MACOS_BUNDLE_CONTENTS_DIR}/Resources")
+	# paths relative to Contents/MacOS
+	set(VEYON_PLUGIN_DIR "../PlugIns/veyon")
+	set(VEYON_TRANSLATIONS_DIR "../Resources/translations")
+	if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+		set(CMAKE_INSTALL_PREFIX "/Applications" CACHE PATH "Install path prefix" FORCE)
+	endif()
 else()
 	if(CMAKE_INSTALL_LIBDIR)
 		set(VEYON_LIB_DIR "${CMAKE_INSTALL_LIBDIR}/veyon" CACHE INTERNAL "Veyon library directory")
@@ -133,6 +161,7 @@ else()
 
 	set(VEYON_INSTALL_PLUGIN_DIR "${VEYON_LIB_DIR}")
 	set(VEYON_INSTALL_DATA_DIR "${CMAKE_INSTALL_DATADIR}/veyon")
+	set(VEYON_INSTALL_BIN_DIR "bin")
 
 	if(WIN32)
 		set(VEYON_PLUGIN_DIR "plugins")
@@ -308,7 +337,14 @@ set(qthttpserver_DIR ${3rdparty_DIR}/qthttpserver)
 
 set(CMAKE_SKIP_BUILD_RPATH  FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
-set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${VEYON_LIB_DIR}")
+if(VEYON_BUILD_MACOS)
+	# executables live in Contents/MacOS, plugins in Contents/PlugIns/veyon - both resolve
+	# libraries and frameworks bundled in Contents/Frameworks
+	set(CMAKE_MACOSX_RPATH ON)
+	set(CMAKE_INSTALL_RPATH "@executable_path/../Frameworks;@loader_path/../../Frameworks;@loader_path")
+else()
+	set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${VEYON_LIB_DIR}")
+endif()
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 
@@ -337,6 +373,13 @@ endif()
 #
 if(WIN32)
 	include(WindowsInstaller)
+endif()
+
+#
+# add macOS application bundle and disk image related targets
+#
+if(VEYON_BUILD_MACOS)
+	include(MacOSBundle)
 endif()
 
 #

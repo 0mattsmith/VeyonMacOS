@@ -1,0 +1,10 @@
+#!/bin/bash
+# Updates the registration of an already installed Veyon Service (e.g. after an update) - new installations
+# register the service in the postinstall script of the "Veyon Service" package
+CLI="${3%/}/Applications/Veyon.app/Contents/MacOS/veyon-cli"
+
+if [ -f /Library/LaunchDaemons/io.veyon.veyon-service.plist ] ; then
+	"$CLI" service register && "$CLI" service start
+fi
+
+exit 0

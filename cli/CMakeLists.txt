@@ -2,6 +2,8 @@ include(BuildVeyonApplication)
 
 set(cli_SOURCES
 	src/main.cpp
+	src/AddOnCommands.cpp
+	src/AddOnCommands.h
 	src/ConfigCommands.cpp
 	src/ConfigCommands.h
 	src/FeatureCommands.cpp
@@ -27,4 +29,9 @@ if(VEYON_BUILD_WINDOWS)
 		NAME WCLI
 		DESCRIPTION "Veyon Command Line Interface (non-console version)"
 		SOURCES ${cli_SOURCES})
+endif()
+
+if(VEYON_BUILD_MACOS)
+	# for detecting whether the window server is available
+	target_link_libraries(veyon-cli PRIVATE "-framework Security")
 endif()

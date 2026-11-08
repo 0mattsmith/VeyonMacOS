@@ -31,8 +31,14 @@
 #include <QMessageBox>
 #include <QSplitter>
 
+#include <QDir>
+#include <QMenuBar>
+#include <QProcess>
+
 #include "AboutDialog.h"
 #include "AccessControlProvider.h"
+#include "AddOnStoreDialog.h"
+#include "PlatformCoreFunctions.h"
 #include "MainWindow.h"
 #include "BuiltinFeatures.h"
 #include "AuthenticationCredentials.h"
@@ -274,6 +280,12 @@ MainWindow::MainWindow( VeyonMaster &masterCore, QWidget* parent ) :
 	addFeaturesToToolBar();
 	reloadSubFeatures();
 
+	addAddOnStoreButton();
+
+#ifdef Q_OS_MACOS
+	setupMacOSMenuBar();
+#endif
+
 	const auto monitoringModeButton = m_modeGroup->button(int(qHash(VeyonCore::builtinFeatures().monitoringMode().feature().uid()))); // clazy:exclude=qt6-qhash-signature
 	if (monitoringModeButton)
 	{
@@ -458,6 +470,87 @@ void MainWindow::showAboutDialog()
 {
 	AboutDialog( this ).exec();
 }
+
+
+
+void MainWindow::showAddOnStore()
+{
+	AddOnStoreDialog dialog( this );
+	dialog.exec();
+}
+
+
+
+void MainWindow::openConfigurator()
+{
+	const auto configuratorFilePath = QDir::toNativeSeparators( QCoreApplication::applicationDirPath() + QDir::separator() +
+																QStringLiteral("veyon-configurator") + VeyonCore::executableSuffix() );
+	if( QProcess::startDetached( configuratorFilePath, {} ) == false )
+	{
+		QMessageBox::warning( this, tr( "Veyon Configurator" ),
+							  tr( "Could not start Veyon Configurator (%1)." ).arg( configuratorFilePath ) );
+	}
+}
+
+
+
+void MainWindow::addAddOnStoreButton()
+{
+	if( VeyonCore::config().addOnStoreForTeachersEnabled() == false &&
+		VeyonCore::platform().coreFunctions().isRunningAsAdmin() == false )
+	{
+		return;
+	}
+
+	// push the button to the right end of the toolbar
+	auto spacer = new QWidget( ui->toolBar );
+	spacer->setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Preferred );
+	ui->toolBar->addWidget( spacer );
+
+	auto addOnStoreButton = new ToolButton( QIcon( QStringLiteral(":/core/addon-store.png") ),
+											tr( "Add-Ons" ), {},
+											tr( "Open the Add-On Store to enable, disable, install or create add-ons." ) );
+	addOnStoreButton->setObjectName( QStringLiteral("AddOnStoreButton") );
+	connect( addOnStoreButton, &QToolButton::clicked, this, &MainWindow::showAddOnStore );
+	addOnStoreButton->addTo( ui->toolBar );
+}
+
+
+
+#ifdef Q_OS_MACOS
+void MainWindow::setupMacOSMenuBar()
+{
+	// native global menu bar with entries in the application menu
+	auto applicationMenu = menuBar()->addMenu( tr( "Veyon" ) );
+
+	auto aboutAction = applicationMenu->addAction( tr( "About Veyon Master" ) );
+	aboutAction->setMenuRole( QAction::AboutRole );
+	connect( aboutAction, &QAction::triggered, this, &MainWindow::showAboutDialog );
+
+	auto configuratorAction = applicationMenu->addAction( tr( "Veyon Configurator…" ) );
+	configuratorAction->setMenuRole( QAction::PreferencesRole );
+	connect( configuratorAction, &QAction::triggered, this, &MainWindow::openConfigurator );
+
+	auto addOnStoreAction = applicationMenu->addAction( tr( "Add-On Store…" ) );
+	addOnStoreAction->setMenuRole( QAction::ApplicationSpecificRole );
+	connect( addOnStoreAction, &QAction::triggered, this, &MainWindow::showAddOnStore );
+
+	auto viewMenu = menuBar()->addMenu( tr( "View" ) );
+
+	auto refreshAction = viewMenu->addAction( tr( "Refresh computers" ) );
+	refreshAction->setShortcut( QKeySequence::Refresh );
+	connect( refreshAction, &QAction::triggered, this, [this]() {
+		VeyonCore::networkObjectDirectoryManager().configuredDirectory()->update();
+		m_master.computerControlListModel().reload();
+	} );
+
+	auto fullScreenAction = viewMenu->addAction( tr( "Enter Full Screen" ) );
+	fullScreenAction->setShortcut( QKeySequence::FullScreen );
+	connect( fullScreenAction, &QAction::triggered, this, [this]() {
+		QWidget::setWindowState( QWidget::windowState() ^ Qt::WindowFullScreen );
+	} );
+}
+#endif
 
 
 

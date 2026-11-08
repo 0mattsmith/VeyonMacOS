@@ -89,8 +89,9 @@ if(WIN32)    # TODO
 		set(CPACK_GENERATOR "NSIS") # this needs NSIS installed, and available
 	endif()
 	set(CPACK_SOURCE_GENERATOR "ZIP")
-elseif( ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")   # TODO
-	set(CPACK_GENERATOR "PackageMake")
+elseif( ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+	# use the macos-package target for self-contained and signed bundles (see cmake/modules/MacOSBundle.cmake)
+	set(CPACK_GENERATOR "productbuild")
 else()
 	if(EXISTS /etc/redhat-release OR EXISTS /etc/fedora-release OR OS_OPENSUSE)
 		set(CPACK_RPM_FILE_NAME "RPM-DEFAULT")

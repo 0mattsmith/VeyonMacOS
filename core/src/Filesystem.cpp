@@ -187,3 +187,32 @@ QString Filesystem::workerFilePath() const
 	return QDir::toNativeSeparators( QCoreApplication::applicationDirPath() + QDir::separator() +
 									 QStringLiteral("veyon-worker" ) + VeyonCore::executableSuffix() );
 }
+
+
+
+QString Filesystem::cliFilePath() const
+{
+	return QDir::toNativeSeparators( QCoreApplication::applicationDirPath() + QDir::separator() +
+									 QStringLiteral("veyon-cli" ) + VeyonCore::executableSuffix() );
+}
+
+
+
+QString Filesystem::addOnsDirectoryPath() const
+{
+#if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)
+	// GLOBALAPPDATA is /etc/veyon on Linux which is no place for binaries
+	return QStringLiteral("/var/lib/veyon/addons");
+#else
+	return QDir::toNativeSeparators( VeyonCore::platform().filesystemFunctions().globalAppDataPath() +
+									 QDir::separator() + QStringLiteral("AddOns") );
+#endif
+}
+
+
+
+QString Filesystem::userAddOnsDirectoryPath() const
+{
+	return QDir::toNativeSeparators( VeyonCore::platform().filesystemFunctions().personalAppDataPath() +
+									 QDir::separator() + QStringLiteral("AddOns") );
+}

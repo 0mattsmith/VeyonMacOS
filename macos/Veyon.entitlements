@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- add-ons installed by administrators (.veyonaddon packages) are signed by their vendors or not at all,
+	     so the hardened runtime must not restrict loading plugins to libraries signed by the same team -->
+	<key>com.apple.security.cs.disable-library-validation</key>
+	<true/>
+	<!-- logging off, restarting and shutting down use AppleScript (System Events) -->
+	<key>com.apple.security.automation.apple-events</key>
+	<true/>
+</dict>
+</plist>

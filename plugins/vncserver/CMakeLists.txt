@@ -7,5 +7,9 @@ if(VEYON_BUILD_LINUX)
 	add_subdirectory(pipewire)
 endif()
 
+if(VEYON_BUILD_MACOS)
+	add_subdirectory(macos-screensharing)
+endif()
+
 add_subdirectory(external)
 add_subdirectory(headless)

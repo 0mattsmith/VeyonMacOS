@@ -1,0 +1,7 @@
+<RCC>
+  <qresource prefix="/volumecontrol">
+    <file alias="volume.png">resources/volume.png</file>
+    <file alias="volume-mute.png">resources/volume-mute.png</file>
+    <file alias="volume-lock.png">resources/volume-lock.png</file>
+  </qresource>
+</RCC>

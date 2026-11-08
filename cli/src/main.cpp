@@ -26,9 +26,14 @@
 
 #include <openssl/crypto.h>
 
+#ifdef Q_OS_MACOS
+#include <Security/AuthSession.h>
+#endif
+
 #include "ConfigCommands.h"
 #include "FeatureCommands.h"
 #include "Logger.h"
+#include "AddOnCommands.h"
 #include "PluginCommands.h"
 #include "PluginManager.h"
 #include "ServiceControlCommands.h"
@@ -44,6 +49,20 @@ int main( int argc, char **argv )
 #ifdef Q_OS_LINUX
 	// do not create graphical application if DISPLAY is not available
 	if( qEnvironmentVariableIsSet( "DISPLAY" ) == false )
+	{
+		app = std::make_unique<QCoreApplication>(argc, argv);
+	}
+	else
+	{
+		app = std::make_unique<QApplication>(argc, argv);
+	}
+#elif defined(Q_OS_MACOS)
+	// do not create graphical application without access to the window server (e.g. in SSH sessions
+	// or when being run by installer scripts)
+	SecuritySessionId sessionId{};
+	SessionAttributeBits sessionAttributes{};
+	if( SessionGetInfo( callerSecuritySession, &sessionId, &sessionAttributes ) != errSessionSuccess ||
+		( sessionAttributes & sessionHasGraphicAccess ) == 0 )
 	{
 		app = std::make_unique<QCoreApplication>(argc, argv);
 	}
@@ -83,6 +102,7 @@ int main( int argc, char **argv )
 	}
 
 	const auto core = std::make_unique<VeyonCore>(app.get(), VeyonCore::Component::CLI, QStringLiteral("CLI"));
+	VeyonCore::pluginManager().registerExtraPluginInterface(new AddOnCommands(core.get()));
 	VeyonCore::pluginManager().registerExtraPluginInterface(new ConfigCommands(core.get()));
 	VeyonCore::pluginManager().registerExtraPluginInterface(new FeatureCommands(core.get()));
 	VeyonCore::pluginManager().registerExtraPluginInterface(new PluginCommands(core.get()));

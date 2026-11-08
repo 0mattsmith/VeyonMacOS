@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="/scriptedaddons">
+    <file alias="scripted-addons.png">resources/scripted-addons.png</file>
+  </qresource>
+</RCC>

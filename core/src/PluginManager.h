@@ -24,6 +24,8 @@
 
 #pragma once
 
+#include <QFileInfo>
+#include <QMap>
 #include <QObject>
 
 #include "Plugin.h"
@@ -52,6 +54,12 @@ public:
 		return m_pluginObjects;
 	}
 
+	//! \brief Plugins which have been disabled via the Add-On Store and therefore are not active
+	const QObjectList& disabledPluginObjects() const
+	{
+		return m_disabledPluginObjects;
+	}
+
 	void registerExtraPluginInterface( QObject* pluginObject );
 
 	PluginUidList pluginUids() const;
@@ -60,13 +68,21 @@ public:
 
 	QString pluginName( Plugin::Uid pluginUid ) const;
 
+	QString pluginFilePath( Plugin::Uid pluginUid ) const;
+
+	bool isPluginDisabled( Plugin::Uid pluginUid ) const;
+
 private:
 	void initPluginSearchPath();
-	void loadPlugins( const QString& nameFilter );
+	void loadPlugins( const QString& nameFilter, bool includeAddOns );
+	QFileInfoList addOnPluginFiles( const QString& nameFilter ) const;
+	bool keepDisabledPluginsLoaded() const;
 
 	QStringList m_pluginSearchPaths;
 	PluginInterfaceList m_pluginInterfaces;
 	QObjectList m_pluginObjects;
+	QObjectList m_disabledPluginObjects;
+	QMap<Plugin::Uid, QString> m_pluginFilePaths;
 	QList<QPluginLoader *> m_pluginLoaders;
 	bool m_noDebugMessages;
 

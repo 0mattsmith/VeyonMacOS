@@ -26,9 +26,13 @@
 
 #include <QCoreApplication>
 #include <QDir>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QPluginLoader>
 
+#include "Filesystem.h"
 #include "Logger.h"
+#include "PlatformPluginInterface.h"
 #include "PluginManager.h"
 #include "VeyonConfiguration.h"
 
@@ -56,20 +60,22 @@ PluginManager::~PluginManager()
 
 	m_pluginInterfaces.clear();
 	m_pluginObjects.clear();
+	m_disabledPluginObjects.clear();
 }
 
 
 
 void PluginManager::loadPlatformPlugins()
 {
-	loadPlugins( QStringLiteral("*-platform") + VeyonCore::sharedLibrarySuffix() );
+	// configuration is not available yet so add-ons can't be considered here
+	loadPlugins( QStringLiteral("*-platform") + VeyonCore::sharedLibrarySuffix(), false );
 }
 
 
 
 void PluginManager::loadPlugins()
 {
-	loadPlugins( QStringLiteral("*") + VeyonCore::sharedLibrarySuffix() );
+	loadPlugins( QStringLiteral("*") + VeyonCore::sharedLibrarySuffix(), true );
 }
 
 
@@ -161,6 +167,29 @@ QString PluginManager::pluginName( Plugin::Uid pluginUid ) const
 
 
 
+QString PluginManager::pluginFilePath( Plugin::Uid pluginUid ) const
+{
+	return m_pluginFilePaths.value( pluginUid );
+}
+
+
+
+bool PluginManager::isPluginDisabled( Plugin::Uid pluginUid ) const
+{
+	const auto disabledAddOns = VeyonCore::config().disabledAddOns();
+	for( const auto& disabledAddOn : disabledAddOns )
+	{
+		if( Plugin::Uid{disabledAddOn} == pluginUid )
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+
+
 void PluginManager::initPluginSearchPath()
 {
 	QDir dir( QCoreApplication::applicationDirPath() );
@@ -190,13 +219,27 @@ void PluginManager::initPluginSearchPath()
 
 
 
-void PluginManager::loadPlugins( const QString& nameFilter )
+void PluginManager::loadPlugins( const QString& nameFilter, bool includeAddOns )
 {
 	QFileInfoList plugins;
 	for (const auto& pluginSearchPath : std::as_const(m_pluginSearchPaths))
 	{
 		plugins.append(QDir(pluginSearchPath).entryInfoList({nameFilter}));
 	}
+
+	PluginUidList disabledPluginUids;
+	if( includeAddOns )
+	{
+		plugins.append( addOnPluginFiles( nameFilter ) );
+
+		const auto disabledAddOns = VeyonCore::config().disabledAddOns();
+		for( const auto& disabledAddOn : disabledAddOns )
+		{
+			disabledPluginUids.append( Plugin::Uid{disabledAddOn} );
+		}
+	}
+
+	const auto addOnsDirectory = VeyonCore::filesystem().addOnsDirectoryPath();
 
 	for( const auto& fileInfo : plugins )
 	{
@@ -213,20 +256,114 @@ void PluginManager::loadPlugins( const QString& nameFilter )
 		auto pluginObject = pluginLoader->instance();
 		auto pluginInterface = qobject_cast<PluginInterface *>( pluginObject );
 
-		if( pluginObject && pluginInterface &&
-			m_pluginInterfaces.contains( pluginInterface ) == false )
+		if( pluginObject == nullptr || pluginInterface == nullptr ||
+			m_pluginInterfaces.contains( pluginInterface ) ||
+			m_disabledPluginObjects.contains( pluginObject ) )
+		{
+			if( pluginObject == nullptr && QDir::toNativeSeparators( fileInfo.filePath() ).startsWith( addOnsDirectory ) )
+			{
+				vWarning() << "failed to load add-on" << fileInfo.filePath() << pluginLoader->errorString();
+			}
+			delete pluginLoader;
+			continue;
+		}
+
+		// platform plugins can never be disabled
+		if( disabledPluginUids.contains( pluginInterface->uid() ) &&
+			qobject_cast<PlatformPluginInterface *>( pluginObject ) == nullptr )
 		{
 			if( m_noDebugMessages == false )
 			{
-				vDebug() << "discovered plugin" << pluginInterface->name() << "at" << fileInfo.filePath();
+				vDebug() << "plugin" << pluginInterface->name() << "has been disabled";
 			}
-			m_pluginInterfaces += pluginInterface;	// clazy:exclude=reserve-candidates
-			m_pluginObjects += pluginObject;		// clazy:exclude=reserve-candidates
-			m_pluginLoaders += pluginLoader;			// clazy:exclude=reserve-candidates
+
+			if( keepDisabledPluginsLoaded() )
+			{
+				// keep plugin loaded (but inactive) so its metadata can be displayed in the Add-On Store
+				m_disabledPluginObjects += pluginObject;	// clazy:exclude=reserve-candidates
+				m_pluginFilePaths[pluginInterface->uid()] = fileInfo.filePath();
+				m_pluginLoaders += pluginLoader;			// clazy:exclude=reserve-candidates
+			}
+			else
+			{
+				pluginLoader->unload();
+				delete pluginLoader;
+			}
+			continue;
 		}
-		else
+
+		if( m_noDebugMessages == false )
 		{
-			delete pluginLoader;
+			vDebug() << "discovered plugin" << pluginInterface->name() << "at" << fileInfo.filePath();
 		}
+		m_pluginInterfaces += pluginInterface;	// clazy:exclude=reserve-candidates
+		m_pluginObjects += pluginObject;		// clazy:exclude=reserve-candidates
+		m_pluginLoaders += pluginLoader;			// clazy:exclude=reserve-candidates
+		m_pluginFilePaths[pluginInterface->uid()] = fileInfo.filePath();
 	}
+}
+
+
+
+QFileInfoList PluginManager::addOnPluginFiles( const QString& nameFilter ) const
+{
+	QFileInfoList pluginFiles;
+
+	const auto disabledAddOns = VeyonCore::config().disabledAddOns();
+
+	// installed add-on packages are stored in subdirectories along with a manifest file
+	const auto packageDirs = QDir( VeyonCore::filesystem().addOnsDirectoryPath() ).entryInfoList( QDir::Dirs | QDir::NoDotAndDotDot );
+	for( const auto& packageDir : packageDirs )
+	{
+		// skip temporary directories used while installing or removing packages
+		if( packageDir.fileName().startsWith( QLatin1Char('.') ) )
+		{
+			continue;
+		}
+
+		QFile manifestFile( packageDir.filePath() + QStringLiteral("/manifest.json") );
+		if( manifestFile.open( QFile::ReadOnly ) == false )
+		{
+			continue;
+		}
+
+		const auto manifest = QJsonDocument::fromJson( manifestFile.readAll() ).object();
+		if( manifest[QStringLiteral("type")].toString() != QLatin1String("plugin") )
+		{
+			continue;
+		}
+
+		// never load code of disabled third party add-ons - the Add-On Store uses the manifest instead
+		const Plugin::Uid uid{ manifest[QStringLiteral("uid")].toString() };
+		bool disabled = false;
+		for( const auto& disabledAddOn : disabledAddOns )
+		{
+			disabled |= ( Plugin::Uid{disabledAddOn} == uid );
+		}
+		if( uid.isNull() || disabled )
+		{
+			continue;
+		}
+
+		pluginFiles.append( QDir( packageDir.filePath() ).entryInfoList( { nameFilter }, QDir::Files ) );
+	}
+
+	return pluginFiles;
+}
+
+
+
+bool PluginManager::keepDisabledPluginsLoaded() const
+{
+	switch( VeyonCore::component() )
+	{
+	case VeyonCore::Component::Master:
+	case VeyonCore::Component::Configurator:
+	case VeyonCore::Component::CLI:
+		return true;
+	default:
+		break;
+	}
+
+	return false;
 }

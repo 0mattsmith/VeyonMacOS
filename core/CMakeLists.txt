@@ -56,7 +56,7 @@ endif()
 
 if(VEYON_BUILD_WINDOWS)
 	# add Windows Socket library required by libvncclient
-	target_link_libraries(veyon-core PRIVATE -lws2_32)
+	target_link_libraries(veyon-core PRIVATE -lws2_32 -lshell32)
 	set_target_properties(veyon-core PROPERTIES PREFIX "")
 	add_windows_resources(veyon-core
 		NAME VeyonCore

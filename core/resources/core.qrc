@@ -2,6 +2,9 @@
   <qresource prefix="/core">
     <file>../../COPYING</file>
     <file>icon64.png</file>
+    <file>addon-store.png</file>
+    <file>addon-generic.png</file>
+    <file>addon-script.png</file>
     <file>application-x-pem-key.png</file>
     <file>license.png</file>
     <file>user-group-new.png</file>

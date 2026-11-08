@@ -1,0 +1,12 @@
+#!/bin/bash
+# Stops the Veyon Service and its programs before Veyon is updated
+SERVICE_LABEL=io.veyon.veyon-service
+
+if launchctl print "system/$SERVICE_LABEL" > /dev/null 2>&1 ; then
+	launchctl bootout "system/$SERVICE_LABEL"
+fi
+
+pkill -x veyon-server
+pkill -x veyon-worker
+
+exit 0

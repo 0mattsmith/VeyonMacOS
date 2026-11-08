@@ -5,3 +5,7 @@ endif()
 if(VEYON_BUILD_LINUX)
 	add_subdirectory(linux)
 endif()
+
+if(VEYON_BUILD_MACOS)
+	add_subdirectory(macos)
+endif()

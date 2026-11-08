@@ -37,6 +37,7 @@
 #include "Configuration/UiMapping.h"
 
 #include "AboutDialog.h"
+#include "AddOnsConfigurationPage.h"
 #include "ConfigurationPagePluginInterface.h"
 #include "ConfigurationManager.h"
 #include "VeyonConfiguration.h"
@@ -54,6 +55,13 @@ MainWindow::MainWindow( QWidget* parent ) :
 	ui->setupUi( this );
 
 	setWindowTitle(tr("Veyon Configurator %1").arg(VeyonCore::versionString()));
+
+	auto addOnsPage = new AddOnsConfigurationPage;
+	ui->configPages->addWidget( addOnsPage );
+	auto addOnsItem = new QListWidgetItem( addOnsPage->windowIcon(), addOnsPage->windowTitle() );
+	addOnsItem->setFlags( Qt::ItemIsSelectable | Qt::ItemIsEnabled );
+	addOnsItem->setData( Qt::UserRole, QVariant::fromValue<ConfigurationPage *>( addOnsPage ) );
+	ui->pageSelector->addItem( addOnsItem );
 
 	loadConfigurationPagePlugins();
 
