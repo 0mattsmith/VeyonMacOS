@@ -101,7 +101,17 @@ cp "$SOURCES/uninstall.sh" "$WORK/dmg/Uninstall Veyon.command"
 chmod 755 "$WORK/dmg/Uninstall Veyon.command"
 
 DMG="$OUTPUT/$BASENAME.dmg"
-hdiutil create -volname "Veyon $VERSION" -srcfolder "$WORK/dmg" -fs HFS+ -format UDZO -ov "$DMG"
+# hdiutil occasionally fails with "Resource busy", especially on CI machines
+for attempt in 1 2 3 ; do
+	if hdiutil create -volname "Veyon $VERSION" -srcfolder "$WORK/dmg" -fs HFS+ -format UDZO -ov "$DMG" ; then
+		break
+	fi
+	if [ $attempt -eq 3 ] ; then
+		exit 1
+	fi
+	echo "hdiutil failed - retrying in 10 seconds"
+	sleep 10
+done
 if [ -n "$SIGNING_IDENTITY" ] && [ "$SIGNING_IDENTITY" != "-" ] ; then
 	codesign --force --sign "$SIGNING_IDENTITY" --timestamp "$DMG"
 fi

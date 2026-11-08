@@ -57,23 +57,29 @@ for qtpaths in "$qtbin/qtpaths6" "$qtbin/qtpaths" ; do
 	fi
 done
 if command -v brew > /dev/null ; then
-	candidates+=("$(brew --prefix)/lib/qt6/plugins/crypto" "$(brew --prefix qca)/lib/qt6/plugins/crypto")
+	# Homebrew installs the QCA plugins into lib/qt/plugins of the qca formula
+	candidates+=("$(brew --prefix qca)/lib/qt/plugins/crypto" "$(brew --prefix)/lib/qt/plugins/crypto"
+				 "$(brew --prefix qca)/lib/qt6/plugins/crypto" "$(brew --prefix)/lib/qt6/plugins/crypto")
 fi
 
+# QCA builds its plugins as CMake modules, which may have the suffix .so instead of .dylib on macOS
 qcaPlugin=""
 for dir in "${candidates[@]}" ; do
-	if [ -f "$dir/libqca-ossl.dylib" ] ; then
-		qcaPlugin="$dir/libqca-ossl.dylib"
-		break
-	fi
+	for name in libqca-ossl.dylib libqca-ossl.so ; do
+		if [ -f "$dir/$name" ] ; then
+			qcaPlugin="$dir/$name"
+			break 2
+		fi
+	done
 done
 if [ -z "$qcaPlugin" ] ; then
-	echo "error: libqca-ossl.dylib not found (searched: ${candidates[*]}) - set QCA_PLUGIN_DIR" >&2
+	echo "error: QCA OpenSSL plugin (libqca-ossl) not found (searched: ${candidates[*]}) - set QCA_PLUGIN_DIR" >&2
 	exit 1
 fi
+echo "Using $qcaPlugin"
 mkdir -p "$APP/Contents/PlugIns/crypto"
 cp -f "$qcaPlugin" "$APP/Contents/PlugIns/crypto/"
-chmod u+w "$APP/Contents/PlugIns/crypto/libqca-ossl.dylib"
+chmod u+w "$APP/Contents/PlugIns/crypto/$(basename "$qcaPlugin")"
 
 
 echo "== Deploying Qt and other libraries"
@@ -126,9 +132,9 @@ sign()
 	codesign "${options[@]}" "$1"
 }
 
-# sign from the inside out: libraries and plugins, frameworks, helper executables, bundles
+# sign from the inside out: libraries and plugins (*.dylib, *.so), frameworks, helper executables, bundles
 while read -r binary ; do
-	if [[ "$binary" == *.dylib ]] ; then
+	if [[ "$binary" != "$APP/Contents/MacOS/"* ]] ; then
 		sign "$binary"
 	fi
 done < <(list_binaries)
