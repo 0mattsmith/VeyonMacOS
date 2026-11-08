@@ -48,7 +48,10 @@ public:
 	bool setLevel( int level );
 	bool setMuted( bool muted );
 
+#ifdef Q_OS_WIN
 private:
+	// whether COM has been initialized by the constructor (and has to be uninitialized again)
 	bool m_initialized{false};
+#endif
 
 };

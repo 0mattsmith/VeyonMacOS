@@ -70,7 +70,8 @@ jobs:
             -DVEYON_MACOS_NOTARY_PROFILE="${NOTARY_PROFILE:-}"
 
       - name: Build
-        run: cmake --build build --parallel
+        # keep going after errors so a single run reports all of them
+        run: cmake --build build --parallel -- -k 0
 
       - name: Create bundles, installer package and disk image
         run: cmake --build build --target macos-package

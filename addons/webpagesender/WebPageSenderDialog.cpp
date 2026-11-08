@@ -158,7 +158,7 @@ void WebPageSenderDialog::accept()
 	auto history = m_master.userConfigurationObject()->value( QLatin1String(HistoryKey), QLatin1String(ConfigParentKey), {} ).toStringList();
 	history.removeAll( m_webPage.url.toString() );
 	history.prepend( m_webPage.url.toString() );
-	m_master.userConfigurationObject()->setValue( QLatin1String(HistoryKey), history.mid( 0, MaximumHistorySize ),
+	m_master.userConfigurationObject()->setValue( QLatin1String(HistoryKey), QStringList( history.mid( 0, MaximumHistorySize ) ),
 												  QLatin1String(ConfigParentKey) );
 	m_master.userConfigurationObject()->setValue( QLatin1String(SettingsKey), QVariantMap{
 													  { QStringLiteral("mode"), int(m_webPage.mode) },

@@ -366,9 +366,9 @@ bool WebPageSenderPlugin::launchBrowser( const WebPage& webPage )
 	QStringList candidates;
 	switch( webPage.browser )
 	{
-	case Browser::Chrome: candidates = { QStringLiteral("google-chrome"), QStringLiteral("chromium"), QStringLiteral("chromium-browser") }; break;
-	case Browser::Edge: candidates = { QStringLiteral("microsoft-edge") }; break;
-	case Browser::Firefox: candidates = { QStringLiteral("firefox") }; break;
+	case Browser::Chrome: candidates = QStringList{ QStringLiteral("google-chrome"), QStringLiteral("chromium"), QStringLiteral("chromium-browser") }; break;
+	case Browser::Edge: candidates = QStringList{ QStringLiteral("microsoft-edge") }; break;
+	case Browser::Firefox: candidates = QStringList{ QStringLiteral("firefox") }; break;
 	case Browser::Default:
 	case Browser::Safari:
 		return false;

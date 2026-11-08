@@ -496,7 +496,8 @@ void FileSenderDialog::sendChunk( ComputerState* state )
 void FileSenderDialog::finishComputer( ComputerState* state )
 {
 	auto arguments = destinationArguments();
-	arguments[Argument::Paths] = m_openFilesCheckBox->isChecked() ? state->filesToOpen.mid( 0, MaximumFilesToOpen ) : QStringList{};
+	// mid() returns QList<QString> with Qt 5, which QVariant doesn't accept
+	arguments[Argument::Paths] = m_openFilesCheckBox->isChecked() ? QStringList( state->filesToOpen.mid( 0, MaximumFilesToOpen ) ) : QStringList{};
 	arguments[Argument::OpenFiles] = m_openFilesCheckBox->isChecked();
 	arguments[Argument::OpenFolder] = m_openFolderCheckBox->isChecked();
 	arguments[Argument::ShowMessage] = m_showMessageCheckBox->isChecked();

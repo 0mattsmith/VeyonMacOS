@@ -240,7 +240,7 @@ AddOnStoreWidget::AddOnStoreWidget( Mode mode, QWidget* parent ) :
 	m_tabWidget = new QTabWidget;
 	mainLayout->addWidget( m_tabWidget, 1 );
 
-	const auto createScrollPage = [this]( QVBoxLayout*& contentLayout ) {
+	const auto createScrollPage = []( QVBoxLayout*& contentLayout ) {
 		auto scrollArea = new QScrollArea;
 		scrollArea->setWidgetResizable( true );
 		scrollArea->setFrameShape( QFrame::NoFrame );
