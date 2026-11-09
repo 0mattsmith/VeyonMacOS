@@ -64,10 +64,11 @@ jobs:
         shell: msys2 {0}
         run: |
           git config --global --add safe.directory '*'
-          # build tools fail with "DLL not found" otherwise
+          # make sure the build tools can be run (e.g. no DLLs of optional dependencies are missing)
           for tool in lupdate lrelease ; do
-            if ntldd -R "$MINGW_PREFIX/bin/$tool.exe" | grep -i "not found" ; then
-              echo "::error::$tool.exe can't be run because of the DLLs listed above"
+            if ! "$MINGW_PREFIX/bin/$tool.exe" -version ; then
+              echo "::error::$tool.exe can't be run - DLLs not found:"
+              ntldd "$MINGW_PREFIX/bin/$tool.exe" | grep -i "not found" | grep -viE "(api|ext)-ms-win-" || true
               exit 1
             fi
           done

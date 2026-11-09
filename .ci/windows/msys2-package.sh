@@ -56,7 +56,7 @@ while true ; do
 		if [ ! -e "$STAGE/$(basename "$(cygpath -u "$dll")")" ] ; then
 			cygpath -u "$dll"
 		fi
-	done)
+	done || true)
 	if [ -z "$missing" ] ; then
 		break
 	fi
@@ -70,12 +70,13 @@ echo "== Checking for unresolved dependencies"
 unresolved=$(find "$STAGE" -iname '*.exe' -o -iname '*.dll' | while read -r binary ; do
 	# DLLs which are next to the program at runtime (e.g. veyon-core.dll for plugins) aren't found when
 	# analyzing a plugin in its subdirectory, so only report DLLs which are missing in the staging directory
-	ntldd "$binary" 2> /dev/null | grep -i "not found" | awk '{ print $1 }' | while read -r dll ; do
+	# API sets (api-ms-win-*, ext-ms-win-*) are virtual DLLs resolved by Windows itself
+	ntldd "$binary" 2> /dev/null | grep -i "not found" | awk '{ print $1 }' | grep -viE "^(api|ext)-ms-win-" | while read -r dll ; do
 		if [ ! -e "$STAGE/$dll" ] && [ ! -e "$(dirname "$binary")/$dll" ] ; then
 			echo "$(basename "$binary"): $dll"
 		fi
 	done
-done | sort -u)
+done | sort -u || true)
 if [ -n "$unresolved" ] ; then
 	echo "error: unresolved DLL dependencies:" >&2
 	echo "$unresolved" >&2
