@@ -95,6 +95,29 @@ done < <(list_binaries)
 "$MACDEPLOYQT" "$APP" "${deployArgs[@]}" -always-overwrite -verbose=1
 
 
+echo "== Removing Qt plugins whose Qt modules are not bundled"
+# macdeployqt also copies plugins of Qt modules Veyon doesn't use (e.g. the PDF and SVG image format plugins
+# or the virtual keyboard) without the modules themselves - Qt can't load these plugins anyway
+for plugin in "$APP"/Contents/PlugIns/*/*.dylib ; do
+	case "$plugin" in
+		"$APP/Contents/PlugIns/veyon/"*|"$APP/Contents/PlugIns/crypto/"*) continue ;;
+	esac
+	if [ ! -f "$plugin" ] ; then
+		continue
+	fi
+	missing=""
+	for dependency in $(otool -L "$plugin" | tail -n +2 | awk '{ print $1 }' | grep '^@rpath/') ; do
+		if [ ! -e "$APP/Contents/Frameworks/${dependency#@rpath/}" ] ; then
+			missing="$missing ${dependency#@rpath/}"
+		fi
+	done
+	if [ -n "$missing" ] ; then
+		echo "removing ${plugin#"$APP/Contents/"} (requires$missing)"
+		rm -f "$plugin"
+	fi
+done
+
+
 echo "== Removing references to the build machine"
 # CMake adds the library directories of the build machine (e.g. Homebrew) as rpaths - everything is
 # bundled now, so remove them to make sure the bundled libraries are always used
@@ -107,7 +130,10 @@ while read -r binary ; do
 done < <(list_binaries)
 
 leftovers=$(list_binaries | while read -r binary ; do
-	otool -L "$binary" | tail -n +2 | awk '{ print $1 }' | grep -E "^/(opt|usr/local)/" | sed "s|^|$binary: |" || true
+	# otool -L also lists the install name of a library itself, which isn't a dependency
+	ownName=$(otool -D "$binary" | tail -n +2)
+	otool -L "$binary" | tail -n +2 | awk '{ print $1 }' | grep -vxF "${ownName:-/}" | \
+		grep -E "^/(opt|usr/local)/" | sed "s|^|$binary: |" || true
 done)
 if [ -n "$leftovers" ] ; then
 	echo "error: the following libraries have not been bundled:" >&2

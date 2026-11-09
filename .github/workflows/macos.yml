@@ -79,9 +79,23 @@ jobs:
       - name: Test bundled programs
         run: |
           cli=build/macos-staging/Veyon.app/Contents/MacOS/veyon-cli
-          "$cli" about
-          "$cli" addons list
-          "$cli" feature list | tee features.txt
+          # on failure, show libraries loaded from outside the bundle (e.g. a second Qt from Homebrew) and a backtrace
+          check() {
+            "$@" && return 0
+            status=$?
+            echo "::group::Diagnostics for: $*"
+            echo "--- libraries loaded from outside the bundle:"
+            DYLD_PRINT_LIBRARIES=1 "$@" 2>&1 | grep -E "^dyld.*(/opt/homebrew|/usr/local)" | head -40 || true
+            echo "--- backtrace:"
+            lldb --batch -o run -k "thread backtrace all" -k "image list" -k quit -- "$@" 2>&1 | \
+              grep -vE "^\[ *[0-9]+\] .* /(System|usr/lib)/" | tail -250 || true
+            echo "::endgroup::"
+            return $status
+          }
+          check "$cli" about
+          check "$cli" addons list
+          check "$cli" feature list > features.txt
+          cat features.txt
           for feature in TaskManager VolumeManager FileManager FileSender WebPageSender InternetAccess WebsiteFilter ; do
             grep -qx "$feature" features.txt || { echo "::error::feature $feature not loaded" ; exit 1 ; }
           done
