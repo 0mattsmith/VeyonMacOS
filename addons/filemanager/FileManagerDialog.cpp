@@ -1073,7 +1073,7 @@ void FileManagerDialog::finishCurrentTransfer( const QString& error )
 
 	m_uploadFile.close();
 	m_transferActive = false;
-	m_currentTransferRequest = {};
+	m_currentTransferRequest = QUuid();
 
 	QTimer::singleShot( 0, this, &FileManagerDialog::processNextTransfer );
 }

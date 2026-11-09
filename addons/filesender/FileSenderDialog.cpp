@@ -424,7 +424,7 @@ void FileSenderDialog::cancelSending()
 				m_plugin.sendRequest( state->computer, Command::Cancel, { { Argument::TransferId, state->transferId } } );
 			}
 			state->active = false;
-			state->pendingRequest = {};
+			state->pendingRequest = QUuid();
 			updateComputerRow( state, tr( "Stopped" ) );
 		}
 	}
@@ -526,7 +526,7 @@ void FileSenderDialog::handleReply( ComputerControlInterface::Pointer computerCo
 		return;
 	}
 
-	state->pendingRequest = {};
+	state->pendingRequest = QUuid();
 	state->lastActivity.restart();
 
 	const auto error = FileSenderPlugin::argument( arguments, Argument::Error ).toString();
@@ -610,7 +610,7 @@ void FileSenderDialog::checkTimeouts()
 		{
 			state->file.close();
 			state->active = false;
-			state->pendingRequest = {};
+			state->pendingRequest = QUuid();
 			updateComputerRow( state, tr( "No response from computer" ) );
 		}
 	}
