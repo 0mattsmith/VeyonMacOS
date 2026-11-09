@@ -44,13 +44,13 @@ RequestExecutionLevel admin
 !define MUI_ABORTWARNING
 !define MUI_UNABORTWARNING
 
-!define MUI_WELCOMEFINISHPAGE_BITMAP "nsis/welcome-page.bmp"
-!define MUI_UNWELCOMEFINISHPAGE_BITMAP "nsis/welcome-page.bmp"
+!define MUI_WELCOMEFINISHPAGE_BITMAP "nsis\welcome-page.bmp"
+!define MUI_UNWELCOMEFINISHPAGE_BITMAP "nsis\welcome-page.bmp"
 
-!define MUI_ICON "nsis/installer.ico"
-!define MUI_UNICON "nsis/uninstaller.ico"
+!define MUI_ICON "nsis\installer.ico"
+!define MUI_UNICON "nsis\uninstaller.ico"
 !define MUI_HEADERIMAGE
-!define MUI_HEADERIMAGE_BITMAP "nsis/header.bmp"
+!define MUI_HEADERIMAGE_BITMAP "nsis\header.bmp"
 !define MUI_HEADERIMAGE_RIGHT
 
 !define MUI_LANGDLL_REGISTRY_ROOT "${REG_ROOT}"
@@ -171,24 +171,24 @@ File "LICENSE.TXT"
 File "README.TXT"
 # plugins
 SetOutPath "$INSTDIR\plugins"
-File "plugins/*.dll"
+File "plugins\*.dll"
 # translations
 SetOutPath "$INSTDIR\translations"
-File "translations/*.qm"
+File "translations\*.qm"
 # QCA plugins
 SetOutPath "$INSTDIR\crypto"
-File "crypto/*.dll"
+File "crypto\*.dll"
 # Qt image format plugin
 SetOutPath "$INSTDIR\imageformats"
-File "imageformats/qjpeg.dll"
+File "imageformats\qjpeg.dll"
 # Qt platform plugin
 SetOutPath "$INSTDIR\platforms"
-File "platforms/qwindows.dll"
+File "platforms\qwindows.dll"
 SetOutPath "$INSTDIR\styles"
-File "styles/*.dll"
+File "styles\*.dll"
 # Qt TLS backend
 SetOutPath "$INSTDIR\tls"
-File "tls/qopensslbackend.dll"
+File "tls\qopensslbackend.dll"
 # configuration
 ExecWait '"$INSTDIR\veyon-wcli.exe" service register'
 ExecWait '"$INSTDIR\veyon-wcli.exe" config set Network/FirewallExceptionEnabled 1'
@@ -224,7 +224,7 @@ SectionEnd
 Section "Interception driver" SEC_INTERCEPTION
 ${INSTALL_TYPE}
 SetOutPath "$INSTDIR\interception"
-File "interception/*"
+File "interception\*"
 SectionEnd
 
 Function RunConfigurator
