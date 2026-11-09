@@ -39,6 +39,11 @@
 #include <QSysInfo>
 #include <QToolTip>
 
+#ifdef Q_OS_MACOS
+#include <mach-o/dyld.h>
+#include <climits>
+#endif
+
 #include "BuiltinFeatures.h"
 #include "FeatureManager.h"
 #include "Filesystem.h"
@@ -231,6 +236,21 @@ void VeyonCore::setupApplicationParameters()
 
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 	QApplication::setAttribute( Qt::AA_UseHighDpiPixmaps );
+#endif
+
+#ifdef Q_OS_MACOS
+	// Qt reads the location of its plugins from Veyon.app/Contents/Resources/qt.conf only for the main program of
+	// the bundle (Veyon Master) - tell the programs in Contents/Helpers before the application object is created
+	char executablePath[PATH_MAX];
+	uint32_t executablePathSize = sizeof(executablePath);
+	if( _NSGetExecutablePath( executablePath, &executablePathSize ) == 0 )
+	{
+		const auto executableDir = QFileInfo( QFile::decodeName( executablePath ) ).canonicalPath();
+		if( executableDir.endsWith( QLatin1String(".app/Contents/Helpers") ) )
+		{
+			QCoreApplication::addLibraryPath( QDir::cleanPath( executableDir + QStringLiteral("/../PlugIns") ) );
+		}
+	}
 #endif
 }
 

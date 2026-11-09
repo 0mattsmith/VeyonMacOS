@@ -99,7 +99,15 @@ cp "$SRC/README.md" "$STAGE/README.TXT"
 unix2dos -q "$STAGE"/*.TXT
 cp -r "$SRC/nsis" "$STAGE/"
 cp "$BUILD/nsis/veyon.nsi" "$STAGE/"
-( cd "$STAGE" && makensis -V2 veyon.nsi )
+# makensis changes to the directory of the script, which all paths in the script are relative to - pass the
+# script as native Windows path (like the windows-binaries target does with an absolute path)
+nsiScript=$(cygpath -w "$STAGE/veyon.nsi")
+echo "makensis $nsiScript"
+if ! makensis -V2 "$nsiScript" ; then
+	echo "error: makensis failed - contents of $(cygpath -w "$STAGE"):" >&2
+	ls -la "$STAGE" "$STAGE/nsis" >&2
+	exit 1
+fi
 mv "$STAGE"/veyon-*setup.exe "$OUTPUT/"
 rm -rf "$(dirname "$STAGE")"
 
