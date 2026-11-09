@@ -1,8 +1,9 @@
 name: "Build and release binaries"
+# Linux packages aren't built for releases automatically (macOS and Windows packages are attached to releases by
+# macos.yml and windows.yml). To add Linux packages to an existing release, run this workflow for its tag:
+#   gh workflow run release.yml --ref vX.Y.Z
 on:
-  push:
-    tags:
-      - "v*.*.*"
+  workflow_dispatch:
 
 permissions:
   contents: write

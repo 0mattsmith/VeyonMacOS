@@ -7,7 +7,9 @@ on:
       - "v*.*.*"
     # changes which only affect other platforms don't need Windows builds
     paths-ignore:
+      - '.github/workflows/build.yml'
       - '.github/workflows/macos.yml'
+      - '.github/workflows/release.yml'
       - 'cmake/modules/MacOSBundle.cmake'
       - 'macos/**'
       - 'push.ps1'

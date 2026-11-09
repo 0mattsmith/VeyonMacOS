@@ -8,6 +8,8 @@ on:
     # changes which only affect other platforms don't need macOS builds
     paths-ignore:
       - '.ci/windows/**'
+      - '.github/workflows/build.yml'
+      - '.github/workflows/release.yml'
       - '.github/workflows/windows.yml'
       - 'cmake/modules/WindowsInstaller.cmake'
       - 'nsis/**'
