@@ -23,6 +23,8 @@
  */
 
 #include <QApplication>
+#include <QLocalServer>
+#include <QLocalSocket>
 #include <QMessageBox>
 
 #include "VeyonConfiguration.h"
@@ -32,12 +34,49 @@
 #include "Logger.h"
 
 
+namespace {
+
+// The Configurator runs with administrative privileges, i.e. as a different user (root) on macOS and Linux, so the
+// socket is created at a fixed location accessible for all users instead of the temporary directory of the user
+QString instanceServerName()
+{
+#ifdef Q_OS_WIN
+	return QStringLiteral("veyon-configurator");
+#else
+	return QStringLiteral("/tmp/veyon-configurator");
+#endif
+}
+
+// brings a running Configurator to the front - returns false if no Configurator is running
+bool activateRunningInstance()
+{
+	QLocalSocket socket;
+	socket.connectToServer( instanceServerName() );
+	if( socket.waitForConnected( 1000 ) == false )
+	{
+		return false;
+	}
+
+	// connecting is the request to activate - no data has to be sent
+	socket.disconnectFromServer();
+	return true;
+}
+
+}
+
+
 
 int main( int argc, char **argv )
 {
 	VeyonCore::setupApplicationParameters();
 
 	QApplication app( argc, argv );
+
+	// only allow one Configurator at a time - checked before asking for administrative privileges
+	if( activateRunningInstance() )
+	{
+		return 0;
+	}
 
 	VeyonCore core( &app, VeyonCore::Component::Configurator, QStringLiteral("Configurator") );
 
@@ -70,9 +109,39 @@ int main( int argc, char **argv )
 		return -1;
 	}
 
+	QLocalServer instanceServer;
+	instanceServer.setSocketOptions( QLocalServer::WorldAccessOption );
+	if( instanceServer.listen( instanceServerName() ) == false )
+	{
+		// another Configurator may have been started at the same time
+		if( activateRunningInstance() )
+		{
+			return 0;
+		}
+
+		// left over by a Configurator which hasn't been closed properly
+		QLocalServer::removeServer( instanceServerName() );
+		if( instanceServer.listen( instanceServerName() ) == false )
+		{
+			vWarning() << "could not listen for other instances:" << instanceServer.errorString();
+		}
+	}
+
 	// now create the main window
 	auto mainWindow = new MainWindow;
 	mainWindow->show();
+
+	// bring the window to the front whenever another instance has been started
+	QObject::connect( &instanceServer, &QLocalServer::newConnection, mainWindow, [&instanceServer, mainWindow]() {
+		while( auto connection = instanceServer.nextPendingConnection() )
+		{
+			connection->disconnectFromServer();
+			connection->deleteLater();
+		}
+		mainWindow->setWindowState( ( mainWindow->windowState() & ~Qt::WindowMinimized ) | Qt::WindowActive );
+		mainWindow->show();
+		VeyonCore::platform().coreFunctions().raiseWindow( mainWindow, false );
+	} );
 
 	return core.exec();
 }
