@@ -228,6 +228,9 @@ void PluginManager::loadPlugins( const QString& nameFilter, bool includeAddOns )
 	}
 
 	PluginUidList disabledPluginUids;
+	// only determined when loading add-ons: it's queried from the platform plugin on Windows and macOS, which
+	// isn't available yet while the platform plugins themselves are being loaded
+	QString addOnsDirectory;
 	if( includeAddOns )
 	{
 		plugins.append( addOnPluginFiles( nameFilter ) );
@@ -237,9 +240,9 @@ void PluginManager::loadPlugins( const QString& nameFilter, bool includeAddOns )
 		{
 			disabledPluginUids.append( Plugin::Uid{disabledAddOn} );
 		}
-	}
 
-	const auto addOnsDirectory = VeyonCore::filesystem().addOnsDirectoryPath();
+		addOnsDirectory = VeyonCore::filesystem().addOnsDirectoryPath();
+	}
 
 	for( const auto& fileInfo : plugins )
 	{
@@ -260,7 +263,8 @@ void PluginManager::loadPlugins( const QString& nameFilter, bool includeAddOns )
 			m_pluginInterfaces.contains( pluginInterface ) ||
 			m_disabledPluginObjects.contains( pluginObject ) )
 		{
-			if( pluginObject == nullptr && QDir::toNativeSeparators( fileInfo.filePath() ).startsWith( addOnsDirectory ) )
+			if( pluginObject == nullptr && addOnsDirectory.isEmpty() == false &&
+				QDir::toNativeSeparators( fileInfo.filePath() ).startsWith( addOnsDirectory ) )
 			{
 				vWarning() << "failed to load add-on" << fileInfo.filePath() << pluginLoader->errorString();
 			}

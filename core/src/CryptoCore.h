@@ -56,6 +56,8 @@ public:
 	PlaintextPassword decryptPassword( const QString& encryptedPassword ) const;
 
 private:
+	static void loadBundledQcaPlugins();
+
 	QCA::Initializer m_qcaInitializer;
 	PrivateKey m_defaultPrivateKey;
 

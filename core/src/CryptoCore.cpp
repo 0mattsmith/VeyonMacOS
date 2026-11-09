@@ -22,6 +22,9 @@
  *
  */
 
+#include <QCoreApplication>
+#include <QDir>
+#include <QPluginLoader>
 #include <QRandomGenerator>
 
 #include "CryptoCore.h"
@@ -30,6 +33,9 @@ CryptoCore::CryptoCore() :
 	m_qcaInitializer(),
 	m_defaultPrivateKey()
 {
+#ifdef Q_OS_MACOS
+	loadBundledQcaPlugins();
+#endif
 	const auto features = QCA::supportedFeatures();
 
 	vDebug() << "CryptoCore instance created - features supported by QCA" << qcaVersionStr() << features;
@@ -48,6 +54,43 @@ CryptoCore::CryptoCore() :
 CryptoCore::~CryptoCore()
 {
 	vDebug();
+}
+
+
+
+void CryptoCore::loadBundledQcaPlugins()
+{
+	// Besides Qt's library paths, QCA always scans the plugin directory it has been built for (e.g. by Homebrew)
+	// and loads each plugin found there before checking whether it already has the provider. If QCA is installed
+	// on the computer as well, this would load a second copy of Qt and other libraries into the application.
+	// Therefore, when running from an application bundle, disable QCA's plugin scanning and only add the
+	// providers of the plugins bundled with the application.
+	const auto applicationDirPath = QCoreApplication::applicationDirPath();
+	const QDir bundledPluginDir( applicationDirPath + QStringLiteral("/../PlugIns/crypto") );
+	if( applicationDirPath.endsWith( QLatin1String(".app/Contents/MacOS") ) == false || bundledPluginDir.exists() == false )
+	{
+		return;
+	}
+
+	// checked by QCA whenever it scans for plugins, i.e. has to remain set
+	qputenv( "QCA_NO_PLUGINS", "1" );
+
+	const auto fileNames = bundledPluginDir.entryList( QDir::Files );
+	for( const auto& fileName : fileNames )
+	{
+		QPluginLoader loader( bundledPluginDir.absoluteFilePath( fileName ) );
+		const auto plugin = qobject_cast<QCAPlugin *>( loader.instance() );
+		const auto provider = plugin ? plugin->createProvider() : nullptr;
+		if( provider == nullptr )
+		{
+			vWarning() << "could not load QCA plugin" << fileName << loader.errorString();
+		}
+		else if( QCA::insertProvider( provider ) == false )
+		{
+			vWarning() << "could not add QCA provider of" << fileName;
+			delete provider;
+		}
+	}
 }
 
 
