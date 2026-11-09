@@ -1,6 +1,6 @@
 #!/bin/bash
 # Registers and starts the Veyon Service (LaunchDaemon io.veyon.veyon-service)
-CLI="${3%/}/Applications/Veyon.app/Contents/MacOS/veyon-cli"
+CLI="${3%/}/Applications/Veyon.app/Contents/Helpers/veyon-cli"
 
 "$CLI" service register || exit 1
 "$CLI" service start || exit 1

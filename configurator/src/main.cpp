@@ -23,6 +23,7 @@
  */
 
 #include <QApplication>
+#include <QIcon>
 #include <QLocalServer>
 #include <QLocalSocket>
 #include <QMessageBox>
@@ -71,6 +72,11 @@ int main( int argc, char **argv )
 	VeyonCore::setupApplicationParameters();
 
 	QApplication app( argc, argv );
+
+#ifdef Q_OS_MACOS
+	// the Configurator isn't the main program of Veyon.app, so set its Dock icon explicitly
+	QApplication::setWindowIcon( QIcon( QStringLiteral(":/configurator/veyon-configurator.png") ) );
+#endif
 
 	// only allow one Configurator at a time - checked before asking for administrative privileges
 	if( activateRunningInstance() )

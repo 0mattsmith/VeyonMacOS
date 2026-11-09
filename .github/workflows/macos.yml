@@ -89,7 +89,7 @@ jobs:
 
       - name: Test bundled programs
         run: |
-          cli=build/macos-staging/Veyon.app/Contents/MacOS/veyon-cli
+          cli=build/macos-staging/Veyon.app/Contents/Helpers/veyon-cli
           # on failure, show libraries loaded from outside the bundle (e.g. a second Qt from Homebrew) and a backtrace
           check() {
             "$@" && return 0
@@ -117,8 +117,24 @@ jobs:
           test -x /Applications/Veyon.app/Contents/MacOS/veyon-master
           test -x "/Applications/Veyon Configurator.app/Contents/MacOS/veyon-configurator-launcher"
           test -f /Library/LaunchDaemons/io.veyon.veyon-service.plist
+          test -x /Applications/Veyon.app/Contents/Helpers/veyon-configurator
+          test ! -e /Applications/Veyon.app/Contents/MacOS/veyon-server
           sleep 10
           sudo launchctl print system/io.veyon.veyon-service | grep -E "state|pid"
+          pgrep -lx veyon-server || echo "(veyon-server is not running)"
+
+          # open Veyon.app like Finder does while the service is running - Veyon Master has to start and keep running
+          # (macOS must not treat the running veyon-server as an instance of Veyon.app)
+          open /Applications/Veyon.app
+          sleep 15
+          if ! pgrep -x veyon-master > /dev/null ; then
+            echo "::error::Veyon Master is not running after opening Veyon.app"
+            lsappinfo list | grep -B2 -A6 -i "veyon" || true
+            exit 1
+          fi
+          echo "Veyon Master is running"
+          pkill -x veyon-master
+
           sudo /Applications/Veyon.app/Contents/Resources/uninstall.sh --purge
           test ! -e /Applications/Veyon.app
           test ! -e "/Applications/Veyon Configurator.app"

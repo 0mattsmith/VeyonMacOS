@@ -160,7 +160,7 @@ sign()
 
 # sign from the inside out: libraries and plugins (*.dylib, *.so), frameworks, helper executables, bundles
 while read -r binary ; do
-	if [[ "$binary" != "$APP/Contents/MacOS/"* ]] ; then
+	if [[ "$binary" != "$APP/Contents/MacOS/"* ]] && [[ "$binary" != "$APP/Contents/Helpers/"* ]] ; then
 		sign "$binary"
 	fi
 done < <(list_binaries)
@@ -171,8 +171,9 @@ for framework in "$APP"/Contents/Frameworks/*.framework ; do
 	fi
 done
 
-for executable in "$APP"/Contents/MacOS/* ; do
-	if [ "$(basename "$executable")" != "$MAIN_EXECUTABLE" ] && is_macho "$executable" ; then
+# all programs except Veyon Master are located in Contents/Helpers (see MacOSBundle.cmake)
+for executable in "$APP"/Contents/Helpers/* "$APP"/Contents/MacOS/* ; do
+	if [ -f "$executable" ] && [ "$(basename "$executable")" != "$MAIN_EXECUTABLE" ] && is_macho "$executable" ; then
 		sign "$executable" "$ENTITLEMENTS"
 	fi
 done

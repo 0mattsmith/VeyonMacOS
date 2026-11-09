@@ -38,6 +38,7 @@
 #include "AboutDialog.h"
 #include "AccessControlProvider.h"
 #include "AddOnStoreDialog.h"
+#include "Filesystem.h"
 #include "PlatformCoreFunctions.h"
 #include "MainWindow.h"
 #include "BuiltinFeatures.h"
@@ -483,8 +484,7 @@ void MainWindow::showAddOnStore()
 
 void MainWindow::openConfigurator()
 {
-	const auto configuratorFilePath = QDir::toNativeSeparators( QCoreApplication::applicationDirPath() + QDir::separator() +
-																QStringLiteral("veyon-configurator") + VeyonCore::executableSuffix() );
+	const auto configuratorFilePath = VeyonCore::filesystem().programFilePath( QStringLiteral("veyon-configurator") );
 	if( QProcess::startDetached( configuratorFilePath, {} ) == false )
 	{
 		QMessageBox::warning( this, tr( "Veyon Configurator" ),

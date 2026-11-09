@@ -145,6 +145,8 @@ elseif(VEYON_BUILD_MACOS)
 	set(VEYON_MACOS_BUNDLE_CONTENTS_DIR "${VEYON_MACOS_BUNDLE_NAME}/Contents")
 	set(VEYON_LIB_DIR "${VEYON_MACOS_BUNDLE_CONTENTS_DIR}/Frameworks" CACHE INTERNAL "Veyon library directory")
 	set(VEYON_INSTALL_BIN_DIR "${VEYON_MACOS_BUNDLE_CONTENTS_DIR}/MacOS")
+	# all programs except Veyon Master - macOS would treat them as instances of Veyon.app in Contents/MacOS
+	set(VEYON_INSTALL_HELPERS_DIR "${VEYON_MACOS_BUNDLE_CONTENTS_DIR}/Helpers")
 	set(VEYON_INSTALL_PLUGIN_DIR "${VEYON_MACOS_BUNDLE_CONTENTS_DIR}/PlugIns/veyon")
 	set(VEYON_INSTALL_DATA_DIR "${VEYON_MACOS_BUNDLE_CONTENTS_DIR}/Resources")
 	# paths relative to Contents/MacOS

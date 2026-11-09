@@ -3,6 +3,10 @@
 # "cmake --install" installs Veyon.app (all programs, libraries and plugins) and "Veyon Configurator.app"
 # (a launcher for the Configurator in Veyon.app) into CMAKE_INSTALL_PREFIX, which defaults to /Applications.
 #
+# Veyon Master is the main program of Veyon.app (Contents/MacOS). All other programs are located in Contents/Helpers:
+# macOS (LaunchServices) treats every GUI process of the programs in Contents/MacOS as an instance of Veyon.app, so
+# e.g. a running veyon-server (started as root) would be activated when opening Veyon.app instead of Veyon Master.
+#
 # For distribution, the following targets create self-contained bundles which run on Macs without Qt or
 # Homebrew installed:
 #

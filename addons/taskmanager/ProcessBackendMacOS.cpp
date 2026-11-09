@@ -57,7 +57,7 @@ uid_t sessionUserId()
 
 QString veyonBundleDirectory()
 {
-	// executables are located in Veyon.app/Contents/MacOS
+	// executables are located in Veyon.app/Contents/MacOS and Veyon.app/Contents/Helpers
 	auto path = QCoreApplication::applicationDirPath();
 	const auto bundleIndex = path.indexOf( QLatin1String(".app/") );
 	if( bundleIndex > 0 )

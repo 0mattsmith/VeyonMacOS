@@ -174,26 +174,42 @@ QString Filesystem::screenshotDirectoryPath() const
 
 
 
+QString Filesystem::programFilePath( const QString& name ) const
+{
+	const auto fileName = name + VeyonCore::executableSuffix();
+
+#ifdef Q_OS_MACOS
+	// all programs except Veyon Master are located in Veyon.app/Contents/Helpers, as macOS would otherwise treat
+	// them as instances of Veyon.app (see cmake/modules/MacOSBundle.cmake) - works from both MacOS and Helpers
+	const auto helperFilePath = QDir::cleanPath( QCoreApplication::applicationDirPath() + QStringLiteral("/../Helpers/") + fileName );
+	if( QFileInfo::exists( helperFilePath ) )
+	{
+		return helperFilePath;
+	}
+#endif
+
+	return QDir::toNativeSeparators( QCoreApplication::applicationDirPath() + QDir::separator() + fileName );
+}
+
+
+
 QString Filesystem::serverFilePath() const
 {
-	return QDir::toNativeSeparators( QCoreApplication::applicationDirPath() + QDir::separator() +
-									 QStringLiteral("veyon-server" ) + VeyonCore::executableSuffix() );
+	return programFilePath( QStringLiteral("veyon-server") );
 }
 
 
 
 QString Filesystem::workerFilePath() const
 {
-	return QDir::toNativeSeparators( QCoreApplication::applicationDirPath() + QDir::separator() +
-									 QStringLiteral("veyon-worker" ) + VeyonCore::executableSuffix() );
+	return programFilePath( QStringLiteral("veyon-worker") );
 }
 
 
 
 QString Filesystem::cliFilePath() const
 {
-	return QDir::toNativeSeparators( QCoreApplication::applicationDirPath() + QDir::separator() +
-									 QStringLiteral("veyon-cli" ) + VeyonCore::executableSuffix() );
+	return programFilePath( QStringLiteral("veyon-cli") );
 }
 
 

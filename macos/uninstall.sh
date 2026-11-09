@@ -23,7 +23,7 @@ fi
 
 APPLICATIONS=/Applications
 APP="$APPLICATIONS/Veyon.app"
-CLI="$APP/Contents/MacOS/veyon-cli"
+CLI="$APP/Contents/Helpers/veyon-cli"
 SERVICE_LABEL=io.veyon.veyon-service
 DATA_DIR="/Library/Application Support/Veyon"
 SCREEN_SHARING_STATE="$DATA_DIR/ScreenSharingOriginalState.json"

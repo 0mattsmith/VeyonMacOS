@@ -42,6 +42,8 @@ public:
 
 	QString screenshotDirectoryPath() const;
 
+	//! \brief Path of a Veyon program (e.g. "veyon-configurator") - the executable suffix is added if required
+	QString programFilePath( const QString& name ) const;
 	QString serverFilePath() const;
 	QString workerFilePath() const;
 	QString cliFilePath() const;

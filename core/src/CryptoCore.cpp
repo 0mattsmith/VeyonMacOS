@@ -67,7 +67,10 @@ void CryptoCore::loadBundledQcaPlugins()
 	// providers of the plugins bundled with the application.
 	const auto applicationDirPath = QCoreApplication::applicationDirPath();
 	const QDir bundledPluginDir( applicationDirPath + QStringLiteral("/../PlugIns/crypto") );
-	if( applicationDirPath.endsWith( QLatin1String(".app/Contents/MacOS") ) == false || bundledPluginDir.exists() == false )
+	// programs are located in Veyon.app/Contents/MacOS or Veyon.app/Contents/Helpers
+	const auto isInBundle = applicationDirPath.endsWith( QLatin1String(".app/Contents/MacOS") ) ||
+							applicationDirPath.endsWith( QLatin1String(".app/Contents/Helpers") );
+	if( isInBundle == false || bundledPluginDir.exists() == false )
 	{
 		return;
 	}

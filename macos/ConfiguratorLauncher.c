@@ -36,7 +36,7 @@
 #include <string.h>
 #include <unistd.h>
 
-static const char* const ConfiguratorPath = "Veyon.app/Contents/MacOS/veyon-configurator";
+static const char* const ConfiguratorPath = "Veyon.app/Contents/Helpers/veyon-configurator";
 static const char* const DefaultApplicationsDirectory = "/Applications";
 
 // Determines the directory containing "Veyon Configurator.app" (usually /Applications)
