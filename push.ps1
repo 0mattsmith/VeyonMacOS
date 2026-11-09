@@ -190,6 +190,8 @@ Invoke-Checked git add -A
 if( -not ( Test-Success git diff --cached --quiet ) )
 {
     if( -not $message ) { Fail 'please describe your changes: .\push.ps1 "What changed"' }
+    # the macOS/Windows builds run for the tag only and skip the branch push of this commit (see .github/workflows)
+    if( $tag ) { $message += "`n`nVeyon-Release: $tag" }
     if( $skipCi ) { $message += "`n`n[skip ci]" }
     $messageFile = ( New-TemporaryFile ).FullName
     [IO.File]::WriteAllText( $messageFile, $message )
