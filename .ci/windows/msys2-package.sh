@@ -67,7 +67,9 @@ while true ; do
 done
 
 echo "== Checking for unresolved dependencies"
-unresolved=$(find "$STAGE" -iname '*.exe' -o -iname '*.dll' | while read -r binary ; do
+# prebuilt third party binaries are skipped (e.g. the 32 bit Interception installer, whose system DLLs ntldd
+# can't resolve)
+unresolved=$(find "$STAGE" \( -iname '*.exe' -o -iname '*.dll' \) -not -path '*/interception/*' -not -name 'ddengine64.dll' | while read -r binary ; do
 	# DLLs which are next to the program at runtime (e.g. veyon-core.dll for plugins) aren't found when
 	# analyzing a plugin in its subdirectory, so only report DLLs which are missing in the staging directory
 	# API sets (api-ms-win-*, ext-ms-win-*) are virtual DLLs resolved by Windows itself
