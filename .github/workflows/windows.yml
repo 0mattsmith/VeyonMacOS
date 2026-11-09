@@ -1,0 +1,138 @@
+name: "Windows Builds"
+on:
+  push:
+    branches:
+      - '**'
+    tags:
+      - "v*.*.*"
+    # changes which only affect other platforms don't need Windows builds
+    paths-ignore:
+      - '.github/workflows/macos.yml'
+      - 'cmake/modules/MacOSBundle.cmake'
+      - 'macos/**'
+      - 'push.ps1'
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-2025
+    env:
+      CI_COMMIT_TAG: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || '' }}
+    steps:
+      # the scripts are run by bash - keep LF line endings
+      - run: git config --global core.autocrlf false
+
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            curl
+            dos2unix
+            git
+          pacboy: >-
+            toolchain:p cmake:p ninja:p ntldd:p nsis:p
+            qt6-base:p qt6-tools:p qt6-5compat:p qt6-httpserver:p qt6-websockets:p
+            qca-qt6:p openssl:p lzo2:p libjpeg-turbo:p libpng:p zlib:p libvncserver:p
+            openldap:p cyrus-sasl:p
+
+      - name: Build Interception library
+        shell: msys2 {0}
+        run: |
+          # input device library used by the Windows platform plugin (https://github.com/oblitum/Interception)
+          base=https://raw.githubusercontent.com/oblitum/Interception/39eecbbc46a52e0402f783b872ef62b0254a896a/library
+          curl -fsSL -o /tmp/interception.c "$base/interception.c"
+          curl -fsSL -o "$MINGW_PREFIX/include/interception.h" "$base/interception.h"
+          gcc -O2 -shared -DINTERCEPTION_EXPORT -I"$MINGW_PREFIX/include" /tmp/interception.c \
+            -o "$MINGW_PREFIX/bin/interception.dll" -Wl,--out-implib,"$MINGW_PREFIX/lib/libinterception.dll.a"
+
+      - name: Configure
+        shell: msys2 {0}
+        run: |
+          git config --global --add safe.directory '*'
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DWITH_WERROR=OFF
+
+      - name: Build
+        shell: msys2 {0}
+        # keep going after errors so a single run reports all of them
+        run: cmake --build build --parallel -- -k 0
+
+      - name: Create installer
+        shell: msys2 {0}
+        run: .ci/windows/msys2-package.sh ${{ startsWith(github.ref, 'refs/tags/') && '--strip' || '' }} build dist
+
+      - name: Test installer, programs and uninstaller
+        # runs without MSYS2 in PATH like on a regular computer
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          function Check { & $args[0] @($args | Select-Object -Skip 1); if( $LASTEXITCODE -ne 0 ) { throw "$args failed with exit code $LASTEXITCODE" } }
+
+          $installer = (Get-ChildItem dist\veyon-*-setup.exe).FullName
+          $process = Start-Process $installer -ArgumentList '/S' -Wait -PassThru
+          if( $process.ExitCode -ne 0 ) { throw "installer failed with exit code $($process.ExitCode)" }
+
+          $dir = "$env:ProgramFiles\Veyon"
+          foreach( $file in 'veyon-master.exe', 'veyon-cli.exe', 'veyon-wcli.exe', 'uninstall.exe', 'plugins\windows-platform.dll',
+                            'plugins\websitefilter.dll', 'plugins\internetaccess.dll', 'crypto\libqca-ossl.dll', 'platforms\qwindows.dll' ) {
+            if( -not ( Test-Path "$dir\$file" ) ) { throw "$file has not been installed" }
+          }
+
+          $cli = "$dir\veyon-cli.exe"
+          Check $cli about
+          Check $cli addons list
+          $features = & $cli feature list
+          if( $LASTEXITCODE -ne 0 ) { throw "feature list failed with exit code $LASTEXITCODE" }
+          foreach( $feature in 'TaskManager', 'VolumeManager', 'FileManager', 'FileSender', 'WebPageSender', 'InternetAccess', 'WebsiteFilter' ) {
+            if( $features -notcontains $feature ) { throw "feature $feature not loaded" }
+          }
+
+          Start-Sleep -Seconds 10
+          Get-Service VeyonService | Format-List Name, Status, StartType
+          if( (Get-Service VeyonService).Status -ne 'Running' ) { throw "Veyon Service is not running" }
+
+          # run the uninstaller in place (_?=) so it can be waited for
+          $process = Start-Process "$dir\uninstall.exe" -ArgumentList '/S', "_?=$dir" -Wait -PassThru
+          if( $process.ExitCode -ne 0 ) { throw "uninstaller failed with exit code $($process.ExitCode)" }
+          if( Get-Service VeyonService -ErrorAction SilentlyContinue ) { throw "Veyon Service has not been removed" }
+          foreach( $file in 'veyon-master.exe', 'veyon-cli.exe', 'plugins', 'crypto' ) {
+            if( Test-Path "$dir\$file" ) { throw "$file has not been removed" }
+          }
+          Write-Host "Install and uninstall test passed"
+
+      - name: Crash diagnostics
+        if: failure()
+        shell: msys2 {0}
+        run: |
+          cli="/c/Program Files/Veyon/veyon-cli.exe"
+          if [ ! -x "$cli" ] ; then
+            echo "Veyon is not installed - nothing to diagnose"
+            exit 0
+          fi
+          for command in "addons list" "feature list" ; do
+            echo "=== veyon-cli $command"
+            # shellcheck disable=SC2086
+            gdb -batch -ex run -ex "thread apply all bt" -ex "info sharedlibrary" --args "$cli" $command 2>&1 | \
+              grep -viE "^0x[0-9a-f]+ +0x[0-9a-f]+ +yes .*(system32|syswow64)" | tail -150 || true
+          done
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: veyon-windows-x64
+          path: dist/*
+          if-no-files-found: ignore
+
+      - uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: dist/*

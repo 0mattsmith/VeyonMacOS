@@ -5,6 +5,13 @@ on:
       - '**'
     tags:
       - "v*.*.*"
+    # changes which only affect other platforms don't need macOS builds
+    paths-ignore:
+      - '.ci/windows/**'
+      - '.github/workflows/windows.yml'
+      - 'cmake/modules/WindowsInstaller.cmake'
+      - 'nsis/**'
+      - 'push.ps1'
   pull_request:
   workflow_dispatch:
 

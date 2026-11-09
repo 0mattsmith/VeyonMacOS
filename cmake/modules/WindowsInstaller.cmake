@@ -12,6 +12,12 @@ else()
 	set(DLL_DDENGINE "ddengine.dll")
 endif()
 
+# add-ons are installed into the plugins directory along with the regular plugins
+set(PLUGIN_BUILD_DIRS plugins/)
+if(WITH_ADDONS)
+	list(APPEND PLUGIN_BUILD_DIRS addons/)
+endif()
+
 add_custom_target(windows-binaries
 	COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config $<CONFIGURATION>
 	COMMAND rm -rf ${WINDOWS_INSTALL_FILES}*
@@ -21,7 +27,7 @@ add_custom_target(windows-binaries
 	COMMAND cp core/veyon-core.dll ${WINDOWS_INSTALL_FILES}
 	COMMAND find . -mindepth 2 -name 'veyon-*.exe' -exec cp '{}' ${WINDOWS_INSTALL_FILES}/ '\;'
 	COMMAND mkdir -p ${WINDOWS_INSTALL_FILES}/plugins
-	COMMAND find plugins/ -name '*.dll' -exec cp '{}' ${WINDOWS_INSTALL_FILES}/plugins/ '\;'
+	COMMAND find ${PLUGIN_BUILD_DIRS} -name '*.dll' -exec cp '{}' ${WINDOWS_INSTALL_FILES}/plugins/ '\;'
 	COMMAND mv ${WINDOWS_INSTALL_FILES}/plugins/lib*.dll ${WINDOWS_INSTALL_FILES}
 	COMMAND mv ${WINDOWS_INSTALL_FILES}/plugins/vnchooks.dll ${WINDOWS_INSTALL_FILES}
 	COMMAND mkdir -p ${WINDOWS_INSTALL_FILES}/translations
