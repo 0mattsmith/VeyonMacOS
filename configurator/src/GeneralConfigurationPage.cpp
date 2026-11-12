@@ -230,13 +230,19 @@ void GeneralConfigurationPage::clearLogFiles()
 		}
 	}
 
-	d = QDir( VeyonCore::platform().filesystemFunctions().globalTempPath() );
-	const auto globalLogFiles = d.entryList( logFilesFilter );
-	for( const auto& f : globalLogFiles )
+	// the service and the server log to the global log directory (e.g. /Library/Logs/Veyon on macOS) - the global
+	// temporary directory is still checked for log files written by older versions
+	for( const auto& globalDirectory : { VeyonCore::platform().filesystemFunctions().globalLogPath(),
+										 VeyonCore::platform().filesystemFunctions().globalTempPath() } )
 	{
-		if( f != QLatin1String("VeyonConfigurator.log") )
+		d = QDir( globalDirectory );
+		const auto globalLogFiles = d.entryList( logFilesFilter );
+		for( const auto& f : globalLogFiles )
 		{
-			success &= d.remove( f );
+			if( f != QLatin1String("VeyonConfigurator.log") )
+			{
+				success &= d.remove( f );
+			}
 		}
 	}
 

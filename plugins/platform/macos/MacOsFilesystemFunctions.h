@@ -34,6 +34,8 @@ public:
 	QString personalAppDataPath() const override;
 	QString globalAppDataPath() const override;
 	QString globalTempPath() const override;
+	QString personalLogPath() const override;
+	QString globalLogPath() const override;
 
 	QString fileOwnerGroup( const QString& filePath ) override;
 	bool setFileOwnerGroup( const QString& filePath, const QString& ownerGroup ) override;

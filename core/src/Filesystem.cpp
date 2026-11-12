@@ -35,7 +35,19 @@
 
 QString Filesystem::expandPath( QString path ) const
 {
-	const auto p = QDir::toNativeSeparators( path.replace( QStringLiteral( "%HOME%" ), QDir::homePath() ).
+#ifndef Q_OS_WIN
+	// configurations are often created on Windows (or imported from there) and contain paths such as
+	// "%HOME%\Desktop" - QDir::toNativeSeparators() doesn't convert backslashes on Unix platforms
+	path.replace( QLatin1Char('\\'), QLatin1Char('/') );
+#endif
+
+	const auto& filesystemFunctions = VeyonCore::platform().filesystemFunctions();
+	const auto logPath = VeyonCore::platform().coreFunctions().isRunningAsAdmin() ?
+							 filesystemFunctions.globalLogPath() : filesystemFunctions.personalLogPath();
+
+	const auto p = QDir::toNativeSeparators( path.replace( QStringLiteral( "%LOGS%" ), logPath ).
+											 replace( QStringLiteral( "$LOGS" ), logPath ).
+											 replace( QStringLiteral( "%HOME%" ), QDir::homePath() ).
 											 replace( QStringLiteral( "$HOME" ), QDir::homePath() ).
 											 replace( QStringLiteral( "%HOSTNAME%" ), QHostInfo::localHostName() ).
 											 replace( QStringLiteral( "$HOSTNAME" ), QHostInfo::localHostName() ).
@@ -72,9 +84,25 @@ QString Filesystem::expandPath( QString path ) const
 
 QString Filesystem::shrinkPath( QString path ) const
 {
+#ifndef Q_OS_WIN
+	path.replace( QLatin1Char('\\'), QLatin1Char('/') );
+#endif
 	path = QDir::toNativeSeparators( path );
 
 	const auto tempPath = QDir::toNativeSeparators(QDir::tempPath());
+	const auto globalTempPath = QDir::toNativeSeparators(VeyonCore::platform().filesystemFunctions().globalTempPath());
+	// the log paths equal the temporary paths on most platforms - map them to %LOGS% only where they are distinct
+	// (macOS) so that %TEMP% keeps its meaning everywhere else
+	auto globalLogPath = QDir::toNativeSeparators(VeyonCore::platform().filesystemFunctions().globalLogPath());
+	auto personalLogPath = QDir::toNativeSeparators(VeyonCore::platform().filesystemFunctions().personalLogPath());
+	if (globalLogPath == globalTempPath || globalLogPath == tempPath)
+	{
+		globalLogPath.clear();
+	}
+	if (personalLogPath == tempPath)
+	{
+		personalLogPath.clear();
+	}
 	const auto personalAppDataPath = VeyonCore::platform().filesystemFunctions().personalAppDataPath();
 	const auto globalAppDataPath = VeyonCore::platform().filesystemFunctions().globalAppDataPath();
 	const auto desktopPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
@@ -86,6 +114,8 @@ QString Filesystem::shrinkPath( QString path ) const
 
 	for (const auto& mapping : {
 			 qMakePair(tempPath, QStringLiteral("TEMP")),
+			 qMakePair(globalLogPath, QStringLiteral("LOGS")),
+			 qMakePair(personalLogPath, QStringLiteral("LOGS")),
 			 qMakePair(personalAppDataPath, QStringLiteral("APPDATA")),
 			 qMakePair(globalAppDataPath, QStringLiteral("GLOBALAPPDATA")),
 			 qMakePair(desktopPath, QStringLiteral("DESKTOP")),
@@ -96,7 +126,7 @@ QString Filesystem::shrinkPath( QString path ) const
 			 qMakePair(homePath, QStringLiteral("HOME")),
 			 })
 	{
-		if (path.startsWith(mapping.first))
+		if (mapping.first.isEmpty() == false && path.startsWith(mapping.first))
 		{
 			path.replace(mapping.first, QStringLiteral("%%1%").arg(mapping.second));
 			break;

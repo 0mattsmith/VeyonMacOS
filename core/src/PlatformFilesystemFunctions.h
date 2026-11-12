@@ -24,6 +24,7 @@
 
 #pragma once
 
+#include <QDir>
 #include <QFile>
 
 #include "PlatformPluginInterface.h"
@@ -37,6 +38,18 @@ public:
 	virtual QString personalAppDataPath() const = 0;
 	virtual QString globalAppDataPath() const = 0;
 	virtual QString globalTempPath() const = 0;
+
+	//! \brief Directory for log files of programs running as the current user (expanded from %LOGS%)
+	virtual QString personalLogPath() const
+	{
+		return QDir::tempPath();
+	}
+
+	//! \brief Directory for log files of system services running with administrative privileges (expanded from %LOGS%)
+	virtual QString globalLogPath() const
+	{
+		return globalTempPath();
+	}
 
 	virtual QString fileOwnerGroup( const QString& filePath ) = 0;
 	virtual bool setFileOwnerGroup( const QString& filePath, const QString& ownerGroup ) = 0;

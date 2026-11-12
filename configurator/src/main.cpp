@@ -97,11 +97,20 @@ int main( int argc, char **argv )
 			return 0;
 		}
 
+#ifdef Q_OS_MACOS
+		QMessageBox::warning( nullptr, MainWindow::tr( "Insufficient privileges" ),
+							  MainWindow::tr( "Could not start with administrative privileges. "
+											  "Please enter the name and password of an administrator account "
+											  "when macOS asks for them. The program will be run with normal "
+											  "user privileges, so the configuration and authentication keys "
+											  "cannot be saved." ) );
+#else
 		QMessageBox::warning( nullptr, MainWindow::tr( "Insufficient privileges" ),
 							  MainWindow::tr( "Could not start with administrative privileges. "
 											  "Please make sure a sudo-like program is installed "
 											  "for your desktop environment! The program will "
 											  "be run with normal user privileges.") );
+#endif
 	}
 
 	if( VeyonConfiguration().isStoreWritable() == false &&
@@ -114,6 +123,20 @@ int main( int argc, char **argv )
 											 "Configurator with higher privileges."));
 		return -1;
 	}
+
+#ifdef Q_OS_MACOS
+	// the system-wide directories (/Library/Application Support/Veyon) can only be written as root - without it
+	// saving authentication keys or installing add-ons fails with hard to understand permission errors
+	if( VeyonCore::platform().coreFunctions().isRunningAsAdmin() == false &&
+		VeyonCore::config().logLevel() != Logger::LogLevel::Debug )
+	{
+		QMessageBox::warning( nullptr, MainWindow::tr( "Insufficient privileges" ),
+							  MainWindow::tr( "Veyon Configurator is not running with administrative privileges. "
+											  "Changes to the configuration and authentication keys cannot be saved. "
+											  "Please start Veyon Configurator from the Applications folder and "
+											  "authenticate as administrator." ) );
+	}
+#endif
 
 	QLocalServer instanceServer;
 	instanceServer.setSocketOptions( QLocalServer::WorldAccessOption );
