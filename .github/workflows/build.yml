@@ -6,6 +6,11 @@ on:
     branches:
       - '**'
 
+# a newer push to the same branch supersedes a running build
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-linux:
     strategy:
