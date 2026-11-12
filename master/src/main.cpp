@@ -32,7 +32,7 @@
 
 int main( int argc, char** argv )
 {
-	VeyonCore::setupApplicationParameters();
+	VeyonCore::setupApplicationParameters( VeyonCore::Component::Master );
 
 	QApplication app( argc, argv );
 	app.connect( &app, &QApplication::lastWindowClosed, &QApplication::quit );

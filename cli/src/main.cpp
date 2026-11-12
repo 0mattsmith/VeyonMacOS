@@ -42,7 +42,7 @@
 
 int main( int argc, char **argv )
 {
-	VeyonCore::setupApplicationParameters();
+	VeyonCore::setupApplicationParameters( VeyonCore::Component::CLI );
 
 	std::unique_ptr<QCoreApplication> app{};
 

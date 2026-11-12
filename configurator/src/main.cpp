@@ -69,7 +69,7 @@ bool activateRunningInstance()
 
 int main( int argc, char **argv )
 {
-	VeyonCore::setupApplicationParameters();
+	VeyonCore::setupApplicationParameters( VeyonCore::Component::Configurator );
 
 	QApplication app( argc, argv );
 

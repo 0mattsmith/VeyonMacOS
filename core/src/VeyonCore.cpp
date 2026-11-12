@@ -226,8 +226,22 @@ QString VeyonCore::sessionIdEnvironmentVariable()
 
 
 
-void VeyonCore::setupApplicationParameters()
+void VeyonCore::setupApplicationParameters( Component component )
 {
+#ifdef Q_OS_MACOS
+	// The server and the workers run in the background but, as programs in Veyon.app/Contents/Helpers, have no
+	// Info.plist which could declare them as agents (LSUIElement). Qt therefore would turn them into regular
+	// applications with a Dock icon when creating the application object. Prevent this transformation so they
+	// start as prohibited applications, which MacOsPlatformPlugin then turns into accessory applications: no Dock
+	// icon, but windows (screen lock, messages, demo) and menu bar extras are still allowed.
+	if( component == Component::Server || component == Component::Worker )
+	{
+		qputenv( "QT_MAC_DISABLE_FOREGROUND_APPLICATION_TRANSFORM", QByteArrayLiteral("1") );
+	}
+#else
+	Q_UNUSED(component)
+#endif
+
 	QCoreApplication::setOrganizationName( QStringLiteral( "Veyon Solutions" ) );
 	QCoreApplication::setOrganizationDomain( QStringLiteral( "veyon.io" ) );
 	QCoreApplication::setApplicationName( QStringLiteral( "Veyon" ) );
