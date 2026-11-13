@@ -54,6 +54,7 @@
 #include <QVersionNumber>
 
 #include "AddOnStoreWidget.h"
+#include "Filesystem.h"
 #include "PlatformCoreFunctions.h"
 #include "ScriptAddOnEditorDialog.h"
 #include "VeyonConfiguration.h"
@@ -825,7 +826,7 @@ void AddOnStoreWidget::exportAddOn( const AddOnManager::AddOn& addOn )
 	fileName.replace( QRegularExpression( QStringLiteral("[^\\w\\-. ]") ), QStringLiteral("_") );
 
 	const auto filePath = QFileDialog::getSaveFileName( this, tr( "Export add-on" ),
-														QStandardPaths::writableLocation( QStandardPaths::DocumentsLocation ) +
+														VeyonCore::filesystem().userStandardLocation( QStandardPaths::DocumentsLocation ) +
 														QDir::separator() + fileName + QLatin1Char('.') + AddOnManager::packageFileSuffix(),
 														tr( "Veyon add-ons (*.%1)" ).arg( AddOnManager::packageFileSuffix() ) );
 	if( filePath.isEmpty() )
@@ -837,7 +838,10 @@ void AddOnStoreWidget::exportAddOn( const AddOnManager::AddOn& addOn )
 	if( AddOnManager::writePackage( filePath, manifest, &errorString ) == false )
 	{
 		QMessageBox::warning( this, tr( "Add-On Store" ), errorString );
+		return;
 	}
+
+	VeyonCore::filesystem().transferOwnershipToUser( filePath );
 }
 
 
@@ -903,7 +907,7 @@ void AddOnStoreWidget::createScriptAddOn()
 void AddOnStoreWidget::installFromFile()
 {
 	const auto filePath = QFileDialog::getOpenFileName( this, tr( "Install add-on" ),
-														QStandardPaths::writableLocation( QStandardPaths::DownloadLocation ),
+														VeyonCore::filesystem().userStandardLocation( QStandardPaths::DownloadLocation ),
 														tr( "Veyon add-ons (*.%1);;All files (*)" ).arg( AddOnManager::packageFileSuffix() ) );
 	if( filePath.isEmpty() == false )
 	{

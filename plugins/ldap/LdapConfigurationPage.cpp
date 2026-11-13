@@ -10,6 +10,7 @@
 #include "LdapConfigurationPage.h"
 #include "Configuration/UiMapping.h"
 #include "LdapDirectory.h"
+#include "Filesystem.h"
 #include "LdapBrowseDialog.h"
 
 #include "ui_LdapConfigurationPage.h"
@@ -692,7 +693,8 @@ void LdapConfigurationPage::testLocations()
 
 void LdapConfigurationPage::browseCACertificateFile()
 {
-	auto caCertFile = QFileDialog::getOpenFileName( this, tr( "Custom CA certificate file" ), {},
+	auto caCertFile = QFileDialog::getOpenFileName( this, tr( "Custom CA certificate file" ),
+													VeyonCore::filesystem().userHomePath(),
 													tr( "Certificate files (*.pem)" ) );
 	if( caCertFile.isEmpty() == false )
 	{

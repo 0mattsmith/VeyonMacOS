@@ -24,6 +24,8 @@
 
 #pragma once
 
+#include <QStandardPaths>
+
 #include "VeyonCore.h"
 
 // clazy:excludeall=rule-of-three
@@ -39,6 +41,18 @@ public:
 	//! \brief Returns a (rich text) description of the placeholders supported by expandPath(), e.g. for tooltips
 	static QString pathPlaceholdersDescription();
 	bool ensurePathExists( const QString &path ) const;
+
+	//! \brief Home directory of the user working with the program. Differs from QDir::homePath() only while
+	//! Veyon Configurator runs with administrative privileges (as root) on macOS and Linux, where files are
+	//! still browsed, imported and exported on behalf of the user who started it.
+	QString userHomePath() const;
+
+	//! \brief Standard location (e.g. Documents) of the user working with the program (see userHomePath())
+	QString userStandardLocation( QStandardPaths::StandardLocation location ) const;
+
+	//! \brief Hands a file written on behalf of the user (e.g. an exported key) over to them - otherwise it would
+	//! belong to root while Veyon Configurator runs with administrative privileges
+	void transferOwnershipToUser( const QString& filePath ) const;
 
 	QString privateKeyPath( const QString& name ) const;
 	QString publicKeyPath( const QString& name ) const;

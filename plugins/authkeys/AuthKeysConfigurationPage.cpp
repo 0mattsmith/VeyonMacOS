@@ -29,6 +29,7 @@
 #include "AuthKeysConfigurationPage.h"
 #include "AuthKeysManager.h"
 #include "FileSystemBrowser.h"
+#include "Filesystem.h"
 #include "UserGroupsBackendManager.h"
 #include "VeyonConfiguration.h"
 #include "Configuration/UiMapping.h"
@@ -157,7 +158,8 @@ void AuthKeysConfigurationPage::importKey()
 {
 	const auto title = ui->importKey->text();
 
-	const auto inputFile = QFileDialog::getOpenFileName( this, title, {}, m_keyFilesFilter );
+	const auto inputFile = QFileDialog::getOpenFileName( this, title, VeyonCore::filesystem().userHomePath(),
+														  m_keyFilesFilter );
 	if( inputFile.isEmpty() )
 	{
 		return;
@@ -198,7 +200,7 @@ void AuthKeysConfigurationPage::exportKey()
 		const auto name = nameAndType[0];
 		const auto type = nameAndType[1];
 
-		const auto outputFile = QFileDialog::getSaveFileName( this, title, QDir::homePath() + QDir::separator() +
+		const auto outputFile = QFileDialog::getSaveFileName( this, title, VeyonCore::filesystem().userHomePath() + QDir::separator() +
 															  AuthKeysManager::exportedKeyFileName( name, type ),
 															  m_keyFilesFilter );
 		if( outputFile.isEmpty() == false )

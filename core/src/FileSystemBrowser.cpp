@@ -44,7 +44,7 @@ QString FileSystemBrowser::exec( const QString &path,
 		case ExistingDirectory:
 			if( !QFileInfo( browsePath ).isDir() )
 			{
-				browsePath = QDir::homePath();
+				browsePath = VeyonCore::filesystem().userHomePath();
 			}
 			break;
 		case ExistingFile:
@@ -55,7 +55,7 @@ QString FileSystemBrowser::exec( const QString &path,
 			}
 			else
 			{
-				browsePath = QDir::homePath();
+				browsePath = VeyonCore::filesystem().userHomePath();
 			}
 			break;
 

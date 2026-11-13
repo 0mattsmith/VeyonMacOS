@@ -151,6 +151,9 @@ bool AuthKeysManager::exportKey( const QString& name, const QString& type, const
 		return false;
 	}
 
+	// the copy of a private key is only readable by its owner, which would be root in Veyon Configurator
+	VeyonCore::filesystem().transferOwnershipToUser( outputFile );
+
 	m_resultMessage = tr( "Key \"%1/%2\" has been exported to \"%3\" successfully." ).arg( name, type, outputFile );
 
 	return true;
