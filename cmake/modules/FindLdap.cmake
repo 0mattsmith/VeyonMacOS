@@ -60,17 +60,24 @@
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #=============================================================================
 
+if(APPLE)
+   # the LDAP framework of macOS is a deprecated OpenLDAP 2.4 - don't search frameworks so that OpenLDAP
+   # from CMAKE_PREFIX_PATH (e.g. Homebrew's keg-only openldap) is preferred over the libraries of the SDK
+   set(_Ldap_CMAKE_FIND_FRAMEWORK "${CMAKE_FIND_FRAMEWORK}")
+   set(CMAKE_FIND_FRAMEWORK NEVER)
+endif()
+
 find_path(Ldap_INCLUDE_DIRS NAMES ldap.h)
+find_library(Ldap_LIBRARIES NAMES ldap)
+find_library(Lber_LIBRARIES NAMES lber)
 
 if(APPLE)
-   find_path(Ldap_LIBRARIES NAMES LDAP
-	  PATHS
-	  /System/Library/Frameworks
-	  /Library/Frameworks
-   )
-else()
-   find_library(Ldap_LIBRARIES NAMES ldap)
-   find_library(Lber_LIBRARIES NAMES lber)
+   if(_Ldap_CMAKE_FIND_FRAMEWORK)
+      set(CMAKE_FIND_FRAMEWORK "${_Ldap_CMAKE_FIND_FRAMEWORK}")
+   else()
+      unset(CMAKE_FIND_FRAMEWORK)
+   endif()
+   unset(_Ldap_CMAKE_FIND_FRAMEWORK)
 endif()
 
 if(Ldap_LIBRARIES AND Lber_LIBRARIES)

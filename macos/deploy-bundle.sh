@@ -86,7 +86,9 @@ echo "== Deploying Qt and other libraries"
 deployArgs=()
 while read -r binary ; do
 	# helper programs, Veyon plugins and Veyon's own libraries (e.g. libveyon-core) - macdeployqt only
-	# analyzes the main executable and the Qt plugins by itself
+	# analyzes the main executable and the Qt plugins by itself. It also bundles all other libraries they
+	# need from outside of macOS (e.g. Homebrew's OpenLDAP and OpenSSL for the LDAP plugin and libkldap-light)
+	# and rewrites their install names, the signing step below signs them like all other bundled libraries.
 	if [ "$(basename "$binary")" != "$MAIN_EXECUTABLE" ] ; then
 		deployArgs+=("-executable=$binary")
 	fi

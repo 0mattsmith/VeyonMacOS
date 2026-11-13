@@ -58,7 +58,9 @@ jobs:
           submodules: recursive
 
       - name: Install dependencies
-        run: brew install ninja qt qca openssl@3 lzo jpeg-turbo libpng libvncserver
+        # openldap is keg-only (macOS ships a deprecated OpenLDAP 2.4) - it is bundled for the LDAP plugin,
+        # which uses the SASL library of macOS (like Homebrew's openldap itself)
+        run: brew install ninja qt qca openssl@3 lzo jpeg-turbo libpng libvncserver openldap
 
       - name: Import signing certificates
         if: env.MACOS_CERTIFICATES_P12 != ''
@@ -83,9 +85,8 @@ jobs:
         run: |
           cmake -S . -B build -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_PREFIX_PATH="$(brew --prefix qt);$(brew --prefix qca);$(brew --prefix openssl@3)" \
+            -DCMAKE_PREFIX_PATH="$(brew --prefix qt);$(brew --prefix qca);$(brew --prefix openssl@3);$(brew --prefix openldap)" \
             -DWITH_LTO=OFF \
-            -DWITH_LDAP=OFF \
             -DVEYON_MACOS_SIGNING_IDENTITY="${MACOS_SIGNING_IDENTITY:--}" \
             -DVEYON_MACOS_INSTALLER_IDENTITY="${MACOS_INSTALLER_IDENTITY}" \
             -DVEYON_MACOS_NOTARY_PROFILE="${NOTARY_PROFILE:-}"
@@ -121,6 +122,17 @@ jobs:
             grep -qx "$feature" features.txt || { echo "::error::feature $feature not loaded" ; exit 1 ; }
           done
 
+          # the LDAP plugin (CLI module, Configurator page, directory and user groups backend) has to load
+          # OpenLDAP from the bundle and the SASL library from macOS
+          check "$cli" ldap help query
+          DYLD_PRINT_LIBRARIES=1 "$cli" ldap help query 2>&1 | grep -E "/lib(ldap|lber|sasl2)[.]" > ldap-libraries.txt || true
+          cat ldap-libraries.txt
+          if ! grep -q "Veyon.app/.*/libldap[.]" ldap-libraries.txt || ! grep -q "Veyon.app/.*/liblber[.]" ldap-libraries.txt || \
+             grep -qE "(/opt/homebrew|/usr/local)/" ldap-libraries.txt ; then
+            echo "::error::the LDAP plugin does not use the bundled OpenLDAP libraries"
+            exit 1
+          fi
+
       - name: Test installer and uninstaller
         run: |
           cli=/Applications/Veyon.app/Contents/Helpers/veyon-cli
@@ -135,6 +147,7 @@ jobs:
           test -x "/Applications/Veyon Configurator.app/Contents/MacOS/veyon-configurator-launcher"
           test -f /Library/LaunchDaemons/io.veyon.veyon-service.plist
           test -x /Applications/Veyon.app/Contents/Helpers/veyon-configurator
+          test -f /Applications/Veyon.app/Contents/PlugIns/veyon/ldap.dylib
           test ! -e /Applications/Veyon.app/Contents/MacOS/veyon-server
           if ! sudo "$cli" config get Directories/Screenshots | grep -qx /tmp/veyon-install-config-test ; then
             echo "::error::the installer did not import $install_config"
