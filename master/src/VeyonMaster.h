@@ -24,6 +24,8 @@
 
 #pragma once
 
+#include <QTimer>
+
 #include "Feature.h"
 #include "Computer.h"
 #include "ComputerControlInterface.h"
@@ -102,7 +104,22 @@ public Q_SLOTS:
 private:
 	void shutdown();
 
+	void reportUnsupportedFeature(ComputerControlInterface::Pointer computerControlInterface,
+								  Feature::Uid featureUid,
+								  const QString& operatingSystem,
+								  Feature::Uid fallbackFeatureUid);
+	void showUnsupportedFeatureReports();
+
 	FeatureList featureList() const;
+
+	struct UnsupportedFeatureReport
+	{
+		Feature::Uid fallbackFeatureUid;
+		QStringList computers;
+	};
+
+	static constexpr auto UnsupportedFeatureReportDelay = 2000;
+	static constexpr auto MaximumListedComputers = 20;
 
 	UserConfig* m_userConfig;
 	const FeatureList m_features;
@@ -115,5 +132,8 @@ private:
 	MainWindow* m_mainWindow;
 
 	Feature::Uid m_currentMode;
+
+	QMap<Feature::Uid, UnsupportedFeatureReport> m_unsupportedFeatureReports;
+	QTimer m_unsupportedFeatureReportTimer;
 
 } ;

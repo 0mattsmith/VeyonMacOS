@@ -46,6 +46,12 @@ public:
 	void reboot() override;
 	void powerDown( bool installUpdates ) override;
 
+	// software updates are managed by macOS itself (System Settings, softwareupdate or MDM)
+	bool canInstallUpdatesOnPowerDown() const override
+	{
+		return false;
+	}
+
 	void raiseWindow( QWidget* widget, bool stayOnTop ) override;
 
 	void disableScreenSaver() override;

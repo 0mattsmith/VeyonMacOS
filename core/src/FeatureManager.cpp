@@ -209,9 +209,21 @@ void FeatureManager::stopFeature( VeyonMasterInterface& master,
 
 
 void FeatureManager::handleFeatureMessage(ComputerControlInterface::Pointer computerControlInterface,
-										  const FeatureMessage& message) const
+										  const FeatureMessage& message)
 {
 	vDebug() << computerControlInterface << message;
+
+	if (message.command() == FeatureMessage::Command::NotSupported)
+	{
+		const auto operatingSystem = message.argument(FeatureMessage::NotSupportedArgument::OperatingSystem).toString();
+
+		vWarning() << "feature" << feature(message.featureUid()).name() << "is not supported on"
+				   << computerControlInterface->computerName() << operatingSystem;
+
+		Q_EMIT featureNotSupported(computerControlInterface, message.featureUid(), operatingSystem,
+								   message.argument(FeatureMessage::NotSupportedArgument::FallbackFeature).toUuid());
+		return;
+	}
 
 	for( const auto& featureInterface : std::as_const( m_featurePluginInterfaces ) )
 	{

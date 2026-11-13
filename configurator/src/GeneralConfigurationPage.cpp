@@ -84,6 +84,8 @@ GeneralConfigurationPage::GeneralConfigurationPage() :
 		ui->userGroupsBackend->addItem(it.value(), it.key());
 	}
 
+	ui->logFileDirectory->setToolTip( Filesystem::pathPlaceholdersDescription() );
+
 	connect( ui->testAuthenticationButton, &QPushButton::clicked, this, &GeneralConfigurationPage::testAuthentication );
 	connect( ui->openLogFileDirectory, &QPushButton::clicked, this, &GeneralConfigurationPage::openLogFileDirectory );
 	connect( ui->clearLogFiles, &QPushButton::clicked, this, &GeneralConfigurationPage::clearLogFiles );

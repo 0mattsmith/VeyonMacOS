@@ -53,6 +53,12 @@ public:
 
 	virtual bool isAnyUserLoggedOn() = 0;
 
+	//! \brief Returns whether users can be logged on remotely via prepareLogon() and performLogon()
+	virtual bool isLogonSupported() const
+	{
+		return true;
+	}
+
 	virtual bool prepareLogon( const QString& username, const Password& password ) = 0;
 	virtual bool performLogon( const QString& username, const Password& password ) = 0;
 	virtual void logoff() = 0;

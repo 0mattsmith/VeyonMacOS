@@ -219,15 +219,20 @@ bool PowerControlFeaturePlugin::handleFeatureMessage( VeyonServerInterface& serv
 													  const MessageContext& messageContext,
 													  const FeatureMessage& message )
 {
-	Q_UNUSED(messageContext)
-
 	auto& featureWorkerManager = server.featureWorkerManager();
 
 	if( message.featureUid() == m_powerDownFeature.uid() ||
 		message.featureUid() == m_powerDownNowFeature.uid() ||
 		message.featureUid() == m_installUpdatesAndPowerDownFeature.uid() )
 	{
-		const auto installUpdates = message.featureUid() == m_installUpdatesAndPowerDownFeature.uid();
+		auto installUpdates = message.featureUid() == m_installUpdatesAndPowerDownFeature.uid();
+		if( installUpdates && VeyonCore::platform().coreFunctions().canInstallUpdatesOnPowerDown() == false )
+		{
+			// power down as requested but let the master know that no updates have been installed
+			sendFeatureNotSupportedReply( server, messageContext, message.featureUid(), m_powerDownNowFeature.uid() );
+			installUpdates = false;
+		}
+
 		VeyonCore::platform().coreFunctions().powerDown( installUpdates );
 	}
 	else if( message.featureUid() == m_powerDownConfirmedFeature.uid() )

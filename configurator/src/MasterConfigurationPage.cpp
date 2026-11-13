@@ -25,6 +25,7 @@
 #include "BuiltinFeatures.h"
 #include "PluginManager.h"
 #include "FeatureManager.h"
+#include "Filesystem.h"
 #include "FileSystemBrowser.h"
 #include "MonitoringMode.h"
 #include "VeyonCore.h"
@@ -42,6 +43,11 @@ MasterConfigurationPage::MasterConfigurationPage() :
 	ui->setupUi(this);
 
 	Configuration::UiMapping::setFlags(ui->advancedSettingsGroupBox, Configuration::Property::Flag::Advanced);
+
+	const auto pathPlaceholdersDescription = Filesystem::pathPlaceholdersDescription();
+	ui->userConfigurationDirectory->setToolTip(pathPlaceholdersDescription);
+	ui->screenshotDirectory->setToolTip(pathPlaceholdersDescription);
+	ui->configurationTemplatesDirectory->setToolTip(pathPlaceholdersDescription);
 
 	connect(ui->openUserConfigurationDirectory, &QPushButton::clicked,
 			 this, &MasterConfigurationPage::openUserConfigurationDirectory);

@@ -55,6 +55,12 @@ public:
 	virtual void reboot() = 0;
 	virtual void powerDown( bool installUpdates ) = 0;
 
+	//! \brief Returns whether powerDown() can install pending operating system updates
+	virtual bool canInstallUpdatesOnPowerDown() const
+	{
+		return true;
+	}
+
 	virtual void raiseWindow( QWidget* widget, bool stayOnTop ) = 0;
 
 	virtual void disableScreenSaver() = 0;

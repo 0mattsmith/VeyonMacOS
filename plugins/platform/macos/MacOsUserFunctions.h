@@ -45,6 +45,12 @@ public:
 
 	bool isAnyUserLoggedOn() override;
 
+	// logging on users remotely is not implemented on macOS
+	bool isLogonSupported() const override
+	{
+		return false;
+	}
+
 	bool prepareLogon( const QString& username, const Password& password ) override;
 	bool performLogon( const QString& username, const Password& password ) override;
 	void logoff() override;

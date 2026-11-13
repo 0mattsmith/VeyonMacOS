@@ -35,6 +35,9 @@ class VEYON_CORE_EXPORT Filesystem : public QObject
 public:
 	QString expandPath( QString path ) const;
 	QString shrinkPath( QString path ) const;
+
+	//! \brief Returns a (rich text) description of the placeholders supported by expandPath(), e.g. for tooltips
+	static QString pathPlaceholdersDescription();
 	bool ensurePathExists( const QString &path ) const;
 
 	QString privateKeyPath( const QString& name ) const;

@@ -82,6 +82,38 @@ QString Filesystem::expandPath( QString path ) const
 
 
 
+QString Filesystem::pathPlaceholdersDescription()
+{
+	const QList<QPair<QString, QString>> placeholders{
+		{ QStringLiteral("%HOME%"), tr("Home directory of the current user") },
+		{ QStringLiteral("%USER%"), tr("Login name of the current user") },
+		{ QStringLiteral("%HOSTNAME%"), tr("Name of the computer") },
+		{ QStringLiteral("%APPDATA%"), tr("Veyon data directory of the current user") },
+		{ QStringLiteral("%GLOBALAPPDATA%"), tr("Veyon data directory shared by all users") },
+		{ QStringLiteral("%TEMP%"), tr("Directory for temporary files") },
+		{ QStringLiteral("%LOGS%"), tr("Directory for Veyon log files") },
+		{ QStringLiteral("%DESKTOP%"), tr("Desktop directory of the current user") },
+		{ QStringLiteral("%DOCUMENTS%"), tr("Documents directory of the current user") },
+		{ QStringLiteral("%DOWNLOADS%"), tr("Downloads directory of the current user") },
+		{ QStringLiteral("%PICTURES%"), tr("Pictures directory of the current user") },
+		{ QStringLiteral("%VIDEOS%"), tr("Videos directory of the current user (Movies on macOS)") },
+	};
+
+	QString rows;
+	for( const auto& placeholder : placeholders )
+	{
+		// multi-argument arg() replaces in a single pass so the % characters of the placeholders are kept
+		rows += QStringLiteral("<tr><td><b>%1</b></td><td>%2</td></tr>").arg( placeholder.first,
+																			  placeholder.second.toHtmlEscaped() );
+	}
+
+	return QStringLiteral("<p>%1</p><table cellspacing=\"2\">%2</table>").arg(
+				tr( "The following placeholders can be used. They are replaced with the matching "
+					"values on each computer." ).toHtmlEscaped(), rows );
+}
+
+
+
 QString Filesystem::shrinkPath( QString path ) const
 {
 #ifndef Q_OS_WIN
