@@ -22,6 +22,7 @@
  *
  */
 
+#include "Filesystem.h"
 #include "FileSystemBrowser.h"
 #include "FileTransferConfiguration.h"
 #include "FileTransferConfigurationPage.h"
@@ -35,6 +36,12 @@ FileTransferConfigurationPage::FileTransferConfigurationPage( FileTransferConfig
 	m_configuration( configuration )
 {
 	ui->setupUi(this);
+
+	const auto pathPlaceholdersDescription = Filesystem::pathPlaceholdersDescription();
+	ui->fileTransferDefaultSourceDirectory->setToolTip(pathPlaceholdersDescription);
+	ui->fileTransferDestinationDirectory->setToolTip(pathPlaceholdersDescription);
+	ui->filesToCollectSourceDirectory->setToolTip(pathPlaceholdersDescription);
+	ui->collectedFilesDestinationDirectory->setToolTip(pathPlaceholdersDescription);
 
 	connect(ui->browseDefaultSourceDirectory, &QAbstractButton::clicked,
 			this, &FileTransferConfigurationPage::browseDefaultSourceDirectory);
