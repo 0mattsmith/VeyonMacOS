@@ -22,6 +22,7 @@
  *
  */
 
+#include <QCoreApplication>
 #include <QFileInfo>
 #include <QProcess>
 #include <QScreen>
@@ -246,9 +247,18 @@ bool MacOsCoreFunctions::runProgramAsAdmin( const QString& program, const QStrin
 		commandLine.append( shellQuote( parameter ) );
 	}
 
+	// the authentication dialog names osascript as the requesting application, so explain who is asking and why
+	const auto prompt = VeyonCore::component() == VeyonCore::Component::Configurator ?
+							QCoreApplication::translate( "MacOsCoreFunctions",
+														 "Veyon Configurator needs administrator privileges to change "
+														 "the Veyon configuration and authentication keys of this computer." ) :
+							QCoreApplication::translate( "MacOsCoreFunctions",
+														 "Veyon needs administrator privileges to continue." );
+
 	// run program in background so osascript returns immediately after successful authentication
-	const auto script = QStringLiteral("do shell script \"%1 > /dev/null 2>&1 &\" with administrator privileges").
-						arg( appleScriptEscape( commandLine.join( QLatin1Char(' ') ) ) );
+	const auto script = QStringLiteral("do shell script \"%1 > /dev/null 2>&1 &\" with prompt \"%2\" "
+									   "with administrator privileges").
+						arg( appleScriptEscape( commandLine.join( QLatin1Char(' ') ) ), appleScriptEscape( prompt ) );
 
 	return QProcess::execute( QStringLiteral("/usr/bin/osascript"), { QStringLiteral("-e"), script } ) == 0;
 }
