@@ -228,7 +228,19 @@ bool MacOsCoreFunctions::isRunningAsAdmin() const
 
 bool MacOsCoreFunctions::runProgramAsAdmin( const QString& program, const QStringList& parameters )
 {
-	QStringList commandLine{ shellQuote( program ) };
+	QStringList commandLine;
+
+	// "do shell script … with administrator privileges" doesn't start the program in the bootstrap context of the
+	// user's GUI (Aqua) session, so per-user services such as the pasteboard aren't available and copying and
+	// pasting text from and to other applications fails. Like the Veyon Server (see MacOsServerProcess), start it
+	// in the user's context - "launchctl asuser" keeps the root privileges.
+	const auto userId = getuid();
+	if( userId != 0 )
+	{
+		commandLine = QStringList{ QStringLiteral("/bin/launchctl"), QStringLiteral("asuser"), QString::number( userId ) };
+	}
+
+	commandLine.append( shellQuote( program ) );
 	for( const auto& parameter : parameters )
 	{
 		commandLine.append( shellQuote( parameter ) );
