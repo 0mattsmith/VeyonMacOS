@@ -1,8 +1,28 @@
 #!/bin/bash
-# Updates the registration of an already installed Veyon Service (e.g. after an update) - new installations
-# register the service in the postinstall script of the "Veyon Service" package
+# Imports a configuration prepared for this installation (see below) and updates the registration of an already
+# installed Veyon Service (e.g. after an update) - new installations register the service in the postinstall script
+# of the "Veyon Service" package
 CLI="${3%/}/Applications/Veyon.app/Contents/Helpers/veyon-cli"
 
+# Counterpart of the /ApplyConfig=<file> option of the Windows installer: an installer package cannot take options,
+# so a configuration exported with "veyon-cli config export" (or Veyon Configurator) is placed at this path before
+# the package is installed, e.g. by an MDM solution - see "Veyon on macOS" in README.md
+INSTALL_CONFIG="${3%/}/Library/Application Support/Veyon/Config/install.json"
+
+if [ -f "$INSTALL_CONFIG" ] ; then
+	echo "Importing the configuration from $INSTALL_CONFIG"
+	if "$CLI" config import "$INSTALL_CONFIG" ; then
+		# like /ApplyConfig, the configuration is applied once at installation time: keeping the file would reapply
+		# it on every later update and silently undo changes made with Veyon Configurator in the meantime
+		rm -f "$INSTALL_CONFIG"
+		echo "The configuration has been imported."
+	else
+		# the file is kept so the import can be investigated (/var/log/install.log) and repeated manually
+		echo "WARNING: could not import the configuration from $INSTALL_CONFIG - the file has been kept for importing it manually with \"$CLI config import\"" >&2
+	fi
+fi
+
+# (re)started only after the import so the service runs with the imported configuration right away
 if [ -f /Library/LaunchDaemons/io.veyon.veyon-service.plist ] ; then
 	"$CLI" service register && "$CLI" service start
 fi

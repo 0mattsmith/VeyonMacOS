@@ -123,12 +123,28 @@ jobs:
 
       - name: Test installer and uninstaller
         run: |
+          cli=/Applications/Veyon.app/Contents/Helpers/veyon-cli
+          install_config="/Library/Application Support/Veyon/Config/install.json"
+          # a configuration file at this path is imported by the installer (see "Veyon on macOS" in README.md)
+          sudo mkdir -p "$(dirname "$install_config")"
+          echo '{"Directories": {"Screenshots": "/tmp/veyon-install-config-test"}}' | sudo tee "$install_config" > /dev/null
           sudo installer -pkg build/macos-dist/*.pkg -target /
+          # the output of the installer scripts only ends up in the installer log
+          sudo grep -E "(pre|post)install:" /var/log/install.log | tail -n 20 || true
           test -x /Applications/Veyon.app/Contents/MacOS/veyon-master
           test -x "/Applications/Veyon Configurator.app/Contents/MacOS/veyon-configurator-launcher"
           test -f /Library/LaunchDaemons/io.veyon.veyon-service.plist
           test -x /Applications/Veyon.app/Contents/Helpers/veyon-configurator
           test ! -e /Applications/Veyon.app/Contents/MacOS/veyon-server
+          if ! sudo "$cli" config get Directories/Screenshots | grep -qx /tmp/veyon-install-config-test ; then
+            echo "::error::the installer did not import $install_config"
+            exit 1
+          fi
+          if [ -e "$install_config" ] ; then
+            echo "::error::$install_config was not removed after the import"
+            exit 1
+          fi
+          echo "The installer imported and removed $install_config"
           sleep 10
           sudo launchctl print system/io.veyon.veyon-service | grep -E "state|pid"
           pgrep -lx veyon-server || echo "(veyon-server is not running)"

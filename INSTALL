@@ -5,6 +5,10 @@ Please note that all instructions in this file apply to the Linux version of
 Veyon. Users of the Windows version of Veyon should run the installer which will
 guide you through the installation. Afterwards the graphical Veyon Configurator
 helps to set up Veyon.
+Users of the macOS version of Veyon should install the package from the disk
+image - see the section "Veyon on macOS" in the README file, which also
+describes how to deploy Veyon together with a prepared configuration (e.g.
+through an MDM solution).
 
 For further information you can also take a look at Veyon administrator manual:
 
