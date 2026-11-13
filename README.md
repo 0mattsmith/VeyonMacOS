@@ -147,6 +147,60 @@ This PPA contains official Veyon packages for Ubuntu suitable for use both on de
 	sudo add-apt-repository ppa:veyon/stable
 	sudo apt-get update
 
+## Veyon on macOS
+
+### Installation
+
+Veyon for macOS is distributed as a disk image (`veyon-<version>-macos-<architecture>.dmg`) containing the
+installer package `Install Veyon.pkg`. The package installs `Veyon.app` (Veyon Master, Veyon Configurator and the
+command line tool `veyon-cli` in `Veyon.app/Contents/Helpers`) and, unless the "Veyon Service" component is
+deselected, registers the Veyon Service as a LaunchDaemon so the computer can be accessed with Veyon Master.
+
+Instead of opening it in the Finder, the package can be installed without user interaction, e.g. from a terminal or
+through an MDM solution:
+
+	sudo installer -pkg "Install Veyon.pkg" -target /
+
+### Installing with a configuration (MDM deployment)
+
+On Windows, the installer applies a prepared configuration when it is run with `/ApplyConfig=<file>`. An installer
+package cannot take options, so the macOS installer looks for the configuration at a fixed path instead:
+
+	/Library/Application Support/Veyon/Config/install.json
+
+If this file exists when the package is installed, the installer imports it with `veyon-cli config import` before
+the Veyon Service is started, so the computer is completely set up when the installation finishes. This works for new
+installations and updates alike, and no matter whether the package is installed in the Finder, with `installer` or
+by an MDM solution.
+
+The file is removed after it has been imported. Like `/ApplyConfig`, the configuration is applied once at
+installation time, so a later update does not silently undo changes made with Veyon Configurator in the meantime.
+To apply a changed configuration with a later update, place the new file again before installing the package. If the
+import fails, the installation still succeeds: a warning is written to `/var/log/install.log` and the file is kept so
+the import can be repeated manually:
+
+	sudo /Applications/Veyon.app/Contents/Helpers/veyon-cli config import "/Library/Application Support/Veyon/Config/install.json"
+
+To create the file, set up Veyon on one Mac with Veyon Configurator and export the configuration, either with
+"File > Save settings to file" in Veyon Configurator or on the command line:
+
+	/Applications/Veyon.app/Contents/Helpers/veyon-cli config export install.json
+
+Export the configuration on a Mac rather than on a Windows or Linux computer, as some settings (e.g. paths) are
+platform-specific.
+
+Authentication keys are not part of the configuration file, just like with `/ApplyConfig` on Windows. Export them in
+Veyon Configurator ("Authentication keys" page) or with `veyon-cli authkeys export` and import them after the package
+has been installed, usually the public key on student computers and the private key on teacher computers.
+
+A complete deployment, e.g. as a script run by the MDM solution, therefore looks like this (the files can also be
+delivered as the payload of a separate package installed before Veyon):
+
+	sudo mkdir -p "/Library/Application Support/Veyon/Config"
+	sudo cp install.json "/Library/Application Support/Veyon/Config/install.json"
+	sudo installer -pkg "Install Veyon.pkg" -target /
+	sudo /Applications/Veyon.app/Contents/Helpers/veyon-cli authkeys import teacher/public teacher_public_key.pem
+
 ## Join development
 
 If you are interested in Veyon, its programming, artwork, testing or something like that, you're welcome to participate in the development of Veyon!
