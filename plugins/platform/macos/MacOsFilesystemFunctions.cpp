@@ -56,6 +56,23 @@ QString MacOsFilesystemFunctions::globalTempPath() const
 
 
 
+// Log files belong in ~/Library/Logs and /Library/Logs on macOS, where Console.app lists them. The temporary
+// directories are no option: they are cleaned up regularly and, as /tmp and /var are symlinks to /private,
+// the Logger refuses them because of its symlink checks.
+QString MacOsFilesystemFunctions::personalLogPath() const
+{
+	return QDir::homePath() + QStringLiteral("/Library/Logs/Veyon");
+}
+
+
+
+QString MacOsFilesystemFunctions::globalLogPath() const
+{
+	return QStringLiteral("/Library/Logs/Veyon");
+}
+
+
+
 QString MacOsFilesystemFunctions::fileOwnerGroup( const QString& filePath )
 {
 	return QFileInfo( filePath ).group();

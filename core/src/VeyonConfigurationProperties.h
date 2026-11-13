@@ -116,10 +116,18 @@
 	OP( VeyonConfiguration, VeyonCore::config(), bool, isFirewallExceptionEnabled, setFirewallExceptionEnabled, "FirewallExceptionEnabled", "Network", true, Configuration::Property::Flag::Advanced )	\
 	OP( VeyonConfiguration, VeyonCore::config(), bool, localConnectOnly, setLocalConnectOnly, "LocalConnectOnly", "Network", false, Configuration::Property::Flag::Advanced )					\
 
+#ifdef Q_OS_MACOS
+// ~/Library is hidden in Finder, so screenshots are stored in the Pictures folder on macOS (which, unlike
+// Desktop and Documents, isn't protected by the privacy settings and therefore needs no user consent)
+#define VEYON_DEFAULT_SCREENSHOT_DIRECTORY "%PICTURES%/Veyon"
+#else
+#define VEYON_DEFAULT_SCREENSHOT_DIRECTORY "%APPDATA%/Screenshots"
+#endif
+
 #define FOREACH_VEYON_DIRECTORIES_CONFIG_PROPERTY(OP) \
 	OP( VeyonConfiguration, VeyonCore::config(), QString, configurationTemplatesDirectory, setConfigurationTemplatesDirectory, "ConfigurationTemplates", "Directories", QDir::toNativeSeparators(QStringLiteral("%GLOBALAPPDATA%/Config/Templates")), Configuration::Property::Flag::Standard )	\
 	OP( VeyonConfiguration, VeyonCore::config(), QString, userConfigurationDirectory, setUserConfigurationDirectory, "UserConfiguration", "Directories", QDir::toNativeSeparators( QStringLiteral( "%APPDATA%/Config" ) ), Configuration::Property::Flag::Standard )	\
-	OP( VeyonConfiguration, VeyonCore::config(), QString, screenshotDirectory, setScreenshotDirectory, "Screenshots", "Directories", QDir::toNativeSeparators( QStringLiteral( "%APPDATA%/Screenshots" ) ), Configuration::Property::Flag::Standard )	\
+	OP( VeyonConfiguration, VeyonCore::config(), QString, screenshotDirectory, setScreenshotDirectory, "Screenshots", "Directories", QDir::toNativeSeparators( QStringLiteral( VEYON_DEFAULT_SCREENSHOT_DIRECTORY ) ), Configuration::Property::Flag::Standard )	\
 
 #define FOREACH_VEYON_MASTER_CONFIG_PROPERTY(OP) \
 	OP( VeyonConfiguration, VeyonCore::config(), int, computerMonitoringUpdateInterval, setComputerMonitoringUpdateInterval, "ComputerMonitoringUpdateInterval", "Master", 1000, Configuration::Property::Flag::Standard )	\

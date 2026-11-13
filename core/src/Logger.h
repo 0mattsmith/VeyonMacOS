@@ -55,7 +55,12 @@ public:
 	static constexpr int DefaultFileSizeLimit = 100;
 	static constexpr int DefaultFileRotationCount = 10;
 	static constexpr int MaximumMessageSize = 16384;
+#ifdef Q_OS_MACOS
+	// ~/Library/Logs/Veyon for programs of the user, /Library/Logs/Veyon for the service (see Filesystem::expandPath())
+	static constexpr const char* DefaultLogFileDirectory = "%LOGS%";
+#else
 	static constexpr const char* DefaultLogFileDirectory = "%TEMP%";
+#endif
 
 	explicit Logger( const QString &appName );
 	~Logger();
