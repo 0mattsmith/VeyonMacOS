@@ -154,6 +154,104 @@ jobs:
           test ! -e /Library/LaunchDaemons/io.veyon.veyon-service.plist
           ! sudo launchctl print system/io.veyon.veyon-service > /dev/null 2>&1
 
+      - name: Test LDAP connections secured with TLS
+        # with the TLS verify mode "Default", the LDAP plugin has to verify server certificates with the CA certificates
+        # of macOS (/etc/ssl/cert.pem), as the CA certificates of Homebrew's OpenSSL don't exist without Homebrew. A local
+        # slapd with a certificate issued by a test CA must not be trusted until this CA is added to /etc/ssl/cert.pem.
+        run: |
+          cli="$PWD/build/macos-staging/Veyon.app/Contents/Helpers/veyon-cli"
+          prefix="$(brew --prefix)"
+          openssl="$(brew --prefix openssl@3)/bin/openssl"
+          slapd="$(brew --prefix openldap)/libexec/slapd"
+          dir="$RUNNER_TEMP/ldap-tls"
+          ldaps_url="ldaps://localhost:6360"
+          # kldap expects the StartTLS extension in the 4th URL query item - an empty 1st item would be dropped
+          starttls_url="ldap://localhost:3890/?namingContexts?base??x-tls"
+          slapd_pid=
+          mkdir -p "$dir/db"
+          cd "$dir"
+
+          cleanup()
+          {
+            status=$?
+            if [ -f cert.pem.orig ] ; then sudo cp cert.pem.orig /etc/ssl/cert.pem ; fi
+            for hidden in "$prefix"/etc/openssl@*.hidden ; do
+              if [ -d "$hidden" ] ; then mv "$hidden" "${hidden%.hidden}" ; fi
+            done
+            if [ -n "$slapd_pid" ] ; then kill "$slapd_pid" || true ; fi
+            sudo "$cli" config clear || true
+            if [ $status -ne 0 ] && [ -f slapd.log ] ; then
+              echo "::group::slapd log" ; tail -100 slapd.log ; echo "::endgroup::"
+            fi
+          }
+          trap cleanup EXIT
+
+          # test CA and a server certificate for localhost issued by it
+          cat > ca.ext <<EOF
+          basicConstraints=critical,CA:TRUE
+          keyUsage=critical,keyCertSign,cRLSign
+          subjectKeyIdentifier=hash
+          EOF
+          cat > server.ext <<EOF
+          basicConstraints=critical,CA:FALSE
+          keyUsage=critical,digitalSignature,keyEncipherment
+          extendedKeyUsage=serverAuth
+          subjectAltName=DNS:localhost,IP:127.0.0.1
+          subjectKeyIdentifier=hash
+          authorityKeyIdentifier=keyid
+          EOF
+          "$openssl" req -new -newkey rsa:2048 -nodes -subj "/CN=Veyon CI LDAP test CA" -keyout ca.key -out ca.csr
+          "$openssl" x509 -req -in ca.csr -signkey ca.key -days 2 -extfile ca.ext -out ca.pem
+          "$openssl" req -new -newkey rsa:2048 -nodes -subj "/CN=localhost" -keyout server.key -out server.csr
+          "$openssl" x509 -req -in server.csr -CA ca.pem -CAkey ca.key -CAcreateserial -days 2 -extfile server.ext -out server.pem
+
+          cat > slapd.conf <<EOF
+          include $prefix/etc/openldap/schema/core.schema
+          pidfile $dir/slapd.pid
+          argsfile $dir/slapd.args
+          TLSCertificateFile $dir/server.pem
+          TLSCertificateKeyFile $dir/server.key
+          database ldif
+          suffix "dc=example,dc=org"
+          directory $dir/db
+          EOF
+          "$slapd" -f slapd.conf -h "ldap://localhost:3890/ ldaps://localhost:6360/" -d stats > slapd.log 2>&1 &
+          slapd_pid=$!
+          for i in $(seq 30) ; do
+            nc -z localhost 3890 && nc -z localhost 6360 && break
+            sleep 1
+          done
+          nc -z localhost 6360
+
+          # like on computers without Homebrew, the default CA certificate locations of the bundled OpenSSL must not exist
+          for openssldir in "$prefix"/etc/openssl@* ; do
+            mv "$openssldir" "$openssldir.hidden"
+          done
+
+          # $1: connection security (1 = StartTLS, 2 = SSL), $2: TLS verify mode (0 = default, 2 = custom CA file), $3: URL
+          query_base_dn()
+          {
+            echo "== Connection security $1, TLS verify mode $2, $3"
+            sudo "$cli" config set LDAP/ConnectionSecurity "$1"
+            sudo "$cli" config set LDAP/TLSVerifyMode "$2"
+            sudo "$cli" ldap autoconfigurebasedn "$3" namingContexts 2>&1 | tee output.txt
+            grep -q "dc=example,dc=org" output.txt
+          }
+
+          sudo "$cli" config set LDAP/TLSCACertificateFile "$dir/ca.pem"
+          # the server works and its certificate is valid for the test CA
+          query_base_dn 2 2 "$ldaps_url" || { echo "::error::LDAPS with a custom CA certificate file failed" ; exit 1 ; }
+          # the test CA is not trusted by macOS yet, so certificate verification has to fail
+          if query_base_dn 2 0 "$ldaps_url" ; then
+            echo "::error::LDAPS succeeded although the server certificate is not trusted by macOS"
+            exit 1
+          fi
+
+          sudo cp /etc/ssl/cert.pem cert.pem.orig
+          sudo sh -c "cat '$dir/ca.pem' >> /etc/ssl/cert.pem"
+          query_base_dn 2 0 "$ldaps_url" || { echo "::error::LDAPS with the CA certificates of macOS failed" ; exit 1 ; }
+          query_base_dn 1 0 "$starttls_url" || { echo "::error::StartTLS with the CA certificates of macOS failed" ; exit 1 ; }
+
       - uses: actions/upload-artifact@v4
         with:
           name: veyon-macos-${{ runner.arch }}

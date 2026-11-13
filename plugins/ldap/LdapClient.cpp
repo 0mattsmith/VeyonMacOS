@@ -2,6 +2,8 @@
 // This file is part of Veyon - https://veyon.io
 // SPDX-License-Identifier: LGPL-2.0-or-later
 
+#include <QFileInfo>
+
 #include "LdapConfiguration.h"
 #include "LdapClient.h"
 
@@ -23,6 +25,42 @@ static inline KLDAPCore::LdapUrl::Scope kldapUrlScope(LdapClient::Scope scope)
 
 	return KLDAPCore::LdapUrl::Base;
 }
+
+
+
+#ifdef Q_OS_MACOS
+// Veyon.app ships OpenLDAP and OpenSSL from Homebrew. If no CA certificates are configured, OpenLDAP makes
+// OpenSSL use its default CA certificate locations, i.e. the OPENSSLDIR of Homebrew's OpenSSL (for example
+// /opt/homebrew/etc/openssl@4), which does not exist on computers without Homebrew, so no server certificate
+// could be verified. Use the CA certificates of macOS instead, unless CA certificates have been configured
+// for OpenLDAP (ldap.conf, ldaprc, LDAPTLS_CACERT, LDAPTLS_CACERTDIR) or OpenSSL (SSL_CERT_FILE, SSL_CERT_DIR).
+static QString systemCACertificateFile()
+{
+	const auto caCertificateFile = QStringLiteral("/etc/ssl/cert.pem");
+
+	char* ldapCACertificateFile = nullptr;
+	char* ldapCACertificateDir = nullptr;
+	ldap_get_option( nullptr, LDAP_OPT_X_TLS_CACERTFILE, &ldapCACertificateFile );
+	ldap_get_option( nullptr, LDAP_OPT_X_TLS_CACERTDIR, &ldapCACertificateDir );
+
+	const auto ldapCACertificatesConfigured = ldapCACertificateFile || ldapCACertificateDir;
+
+	ldap_memfree( ldapCACertificateFile );
+	ldap_memfree( ldapCACertificateDir );
+
+	if( ldapCACertificatesConfigured ||
+		qEnvironmentVariableIsSet( "SSL_CERT_FILE" ) ||
+		qEnvironmentVariableIsSet( "SSL_CERT_DIR" ) ||
+		QFileInfo::exists( caCertificateFile ) == false )
+	{
+		return {};
+	}
+
+	vDebug() << "using CA certificates of macOS from" << caCertificateFile;
+
+	return caCertificateFile;
+}
+#endif
 
 
 
@@ -499,6 +537,11 @@ void LdapClient::initTLS()
 	{
 	case TLSVerifyDefault:
 		m_server->setTLSRequireCertificate(KLDAPCore::LdapServer::TLSReqCertDefault);
+#ifdef Q_OS_MACOS
+		// like with a custom CA certificate file, kldap creates a new TLS context for the connection
+		// (nothing changes if systemCACertificateFile() returns an empty string)
+		m_server->setTLSCACertFile( systemCACertificateFile() );
+#endif
 		break;
 	case TLSVerifyNever:
 		m_server->setTLSRequireCertificate(KLDAPCore::LdapServer::TLSReqCertNever);
