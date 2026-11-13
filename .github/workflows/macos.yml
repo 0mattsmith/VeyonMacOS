@@ -14,16 +14,26 @@ on:
       - 'cmake/modules/WindowsInstaller.cmake'
       - 'nsis/**'
       - 'push.ps1'
+  # only needed for pull requests from forks (see the job condition) - macOS minutes are billed tenfold
   pull_request:
   workflow_dispatch:
 
 permissions:
   contents: write
 
+# a newer push to the same branch supersedes a running build - release builds (tags) are never cancelled
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref_type != 'tag' }}
+
 jobs:
   build-macos:
-    # release commits (created by push.ps1 --bump) are built for their tag only, not for the branch push as well
-    if: github.event_name != 'push' || github.ref_type == 'tag' || !contains(github.event.head_commit.message, 'Veyon-Release:')
+    # Pull requests from branches of this repository are already built by their push events, so the pull_request
+    # event only has to build pull requests from forks (whose push events run in the fork, not here).
+    # Release commits (created by push.ps1 --bump) are built for their tag only, not for the branch push as well.
+    if: >-
+      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository) &&
+      (github.event_name != 'push' || github.ref_type == 'tag' || !contains(github.event.head_commit.message, 'Veyon-Release:'))
     strategy:
       fail-fast: false
       matrix:
