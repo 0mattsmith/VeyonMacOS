@@ -183,10 +183,7 @@ bool AccessControlProvider::processAuthorizedGroups( const QString& accessingUse
 
 	vDebug() << groupsOfAccessingUser << m_authorizedUserGroups;
 
-	const auto groupsOfAccessingUserSet = QSet<QString>{ groupsOfAccessingUser.begin(), groupsOfAccessingUser.end() };
-	const auto authorizedUserGroupSet = QSet<QString>{ m_authorizedUserGroups.begin(), m_authorizedUserGroups.end() };
-
-	return groupsOfAccessingUserSet.intersects( authorizedUserGroupSet );
+	return haveCommonUserGroup( groupsOfAccessingUser, m_authorizedUserGroups );
 }
 
 
@@ -281,7 +278,7 @@ void AccessControlProvider::sendDetails(QIODevice* ioDevice, const QString& deta
 bool AccessControlProvider::isMemberOfUserGroup( const QString &user,
 												 const QString &groupName ) const
 {
-	return matchList(m_userGroupsBackend->groupsOfUser(user, m_useDomainUserGroups), groupName);
+	return matchList(m_userGroupsBackend->groupsOfUser(user, m_useDomainUserGroups), groupName, Qt::CaseInsensitive);
 }
 
 
@@ -298,10 +295,7 @@ bool AccessControlProvider::haveGroupsInCommon( const QString &userOne, const QS
 	const auto userOneGroups = m_userGroupsBackend->groupsOfUser( userOne, m_useDomainUserGroups );
 	const auto userTwoGroups = m_userGroupsBackend->groupsOfUser( userTwo, m_useDomainUserGroups );
 
-	const auto userOneGroupSet = QSet<QString>{ userOneGroups.begin(), userOneGroups.end() };
-	const auto userTwoGroupSet = QSet<QString>{ userTwoGroups.begin(), userTwoGroups.end() };
-
-	return userOneGroupSet.intersects( userTwoGroupSet );
+	return haveCommonUserGroup( userOneGroups, userTwoGroups );
 }
 
 
@@ -499,8 +493,10 @@ QStringList AccessControlProvider::objectNames( const NetworkObjectList& objects
 
 
 
-bool AccessControlProvider::matchList(const QStringList& list, const QString& pattern)
+bool AccessControlProvider::matchList(const QStringList& list, const QString& pattern,
+									  Qt::CaseSensitivity caseSensitivity)
 {
+	// explicit regular expressions are used as written - "(?i)" makes them case-insensitive
 	if (pattern.startsWith(QLatin1Char('/')) && pattern.endsWith(QLatin1Char('/')) &&
 		pattern.length() > 2)
 	{
@@ -509,12 +505,39 @@ bool AccessControlProvider::matchList(const QStringList& list, const QString& pa
 
 	if (pattern.endsWith(QLatin1Char('*')))
 	{
-		const auto rx = QRegularExpression(QRegularExpression::wildcardToRegularExpression(pattern));
+		const auto rx = QRegularExpression(QRegularExpression::wildcardToRegularExpression(pattern),
+										   caseSensitivity == Qt::CaseInsensitive ?
+											   QRegularExpression::CaseInsensitiveOption :
+											   QRegularExpression::NoPatternOption);
 		if (rx.isValid())
 		{
 			return list.indexOf(rx) >= 0;
 		}
 	}
 
-	return list.contains(pattern);
+	return list.contains(pattern, caseSensitivity);
+}
+
+
+
+// Group names are compared case-insensitively, as Windows does, so that a configuration works on all platforms:
+// the same group is typically named "Teachers" on Windows and "teachers" on macOS and Linux.
+bool AccessControlProvider::haveCommonUserGroup(const QStringList& groups, const QStringList& otherGroups)
+{
+	QSet<QString> foldedGroups;
+	foldedGroups.reserve(groups.size());
+	for (const auto& group : groups)
+	{
+		foldedGroups.insert(group.toCaseFolded());
+	}
+
+	for (const auto& group : otherGroups)
+	{
+		if (foldedGroups.contains(group.toCaseFolded()))
+		{
+			return true;
+		}
+	}
+
+	return false;
 }
