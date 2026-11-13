@@ -37,6 +37,7 @@
 #include "Configuration/UiMapping.h"
 
 #include "AboutDialog.h"
+#include "Filesystem.h"
 #include "AddOnsConfigurationPage.h"
 #include "ConfigurationPagePluginInterface.h"
 #include "ConfigurationManager.h"
@@ -205,7 +206,7 @@ void MainWindow::resetOrApply( QAbstractButton *btn )
 void MainWindow::loadSettingsFromFile()
 {
 	QString fileName = QFileDialog::getOpenFileName( this, tr( "Load settings from file" ),
-													 QDir::homePath(), tr( "JSON files (*.json)" ) );
+													 VeyonCore::filesystem().userHomePath(), tr( "JSON files (*.json)" ) );
 	if( !fileName.isEmpty() )
 	{
 		// write current configuration to output file
@@ -221,7 +222,7 @@ void MainWindow::loadSettingsFromFile()
 void MainWindow::saveSettingsToFile()
 {
 	QString fileName = QFileDialog::getSaveFileName( this, tr( "Save settings to file" ),
-													 QDir::homePath(), tr( "JSON files (*.json)" ) );
+													 VeyonCore::filesystem().userHomePath(), tr( "JSON files (*.json)" ) );
 	if( !fileName.isEmpty() )
 	{
 		if( !fileName.endsWith( QStringLiteral(".json"), Qt::CaseInsensitive ) )
@@ -233,6 +234,7 @@ void MainWindow::saveSettingsToFile()
 
 		// write current configuration to output file
 		Configuration::JsonStore(Configuration::JsonStore::Scope::System, fileName).flush(&VeyonCore::config());
+		VeyonCore::filesystem().transferOwnershipToUser( fileName );
 
 		m_configChanged = configChangedPrevious;
 		ui->buttonBox->setEnabled( m_configChanged );

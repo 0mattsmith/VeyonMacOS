@@ -50,6 +50,7 @@
 #include <QVBoxLayout>
 
 #include "AddOnManager.h"
+#include "Filesystem.h"
 #include "PlatformUserFunctions.h"
 #include "ScriptAddOnEditorDialog.h"
 
@@ -611,7 +612,7 @@ void ScriptAddOnEditorDialog::insertExample( int exampleIndex )
 void ScriptAddOnEditorDialog::chooseIcon()
 {
 	const auto fileName = QFileDialog::getOpenFileName( this, tr( "Choose icon" ),
-														QStandardPaths::writableLocation( QStandardPaths::PicturesLocation ),
+														VeyonCore::filesystem().userStandardLocation( QStandardPaths::PicturesLocation ),
 														tr( "Images (*.png *.jpg *.jpeg *.bmp)" ) );
 	if( fileName.isEmpty() )
 	{
@@ -652,7 +653,7 @@ void ScriptAddOnEditorDialog::exportPackage()
 	fileName.replace( QRegularExpression( QStringLiteral("[^\\w\\-. ]") ), QStringLiteral("_") );
 
 	const auto filePath = QFileDialog::getSaveFileName( this, tr( "Export add-on" ),
-														QStandardPaths::writableLocation( QStandardPaths::DocumentsLocation ) +
+														VeyonCore::filesystem().userStandardLocation( QStandardPaths::DocumentsLocation ) +
 														QDir::separator() + fileName + QLatin1Char('.') + AddOnManager::packageFileSuffix(),
 														tr( "Veyon add-ons (*.%1)" ).arg( AddOnManager::packageFileSuffix() ) );
 	if( filePath.isEmpty() )
@@ -663,7 +664,10 @@ void ScriptAddOnEditorDialog::exportPackage()
 	if( AddOnManager::writePackage( filePath, manifest(), &errorString ) == false )
 	{
 		QMessageBox::warning( this, windowTitle(), errorString );
+		return;
 	}
+
+	VeyonCore::filesystem().transferOwnershipToUser( filePath );
 }
 
 

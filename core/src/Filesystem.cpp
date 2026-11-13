@@ -24,13 +24,176 @@
 
 #include <QCoreApplication>
 #include <QDir>
+#include <QFileInfo>
 #include <QHostInfo>
 #include <QStandardPaths>
 
+#ifdef Q_OS_UNIX
+#include <pwd.h>
+#include <unistd.h>
+#endif
+
 #include "VeyonConfiguration.h"
 #include "Filesystem.h"
+#include "PlatformCoreFunctions.h"
 #include "PlatformFilesystemFunctions.h"
 #include "PlatformUserFunctions.h"
+
+
+namespace {
+
+// The user on whose behalf Veyon Configurator runs while it has administrative privileges
+struct ElevatingUser
+{
+	QString home;
+	QStringList processHomes;	// spellings of the home directory of the elevated process itself (root)
+#ifdef Q_OS_UNIX
+	uid_t uid = 0;
+	gid_t gid = 0;
+#endif
+
+	bool isValid() const
+	{
+		return home.isEmpty() == false;
+	}
+};
+
+const ElevatingUser& elevatingUser()
+{
+	// the user can't change while the program is running
+	static const ElevatingUser user = []() {
+		ElevatingUser result;
+#ifdef Q_OS_UNIX
+		// on Windows the elevated program keeps the profile of the user, so there's nothing to do
+		if( VeyonCore::component() != VeyonCore::Component::Configurator || geteuid() != 0 )
+		{
+			return result;
+		}
+
+		const passwd* entry = nullptr;
+
+		// pkexec (used on Linux) and sudo tell the UID of the calling user
+		for( const auto* variable : { "PKEXEC_UID", "SUDO_UID" } )
+		{
+			bool ok = false;
+			const auto uid = qEnvironmentVariableIntValue( variable, &ok );
+			if( ok && uid > 0 )
+			{
+				entry = getpwuid( uid_t(uid) );
+				break;
+			}
+		}
+
+		// macOS ("do shell script … with administrator privileges") doesn't, but the administrator credentials
+		// have been entered by the user logged in at the console, which the platform plugin reports for root
+		if( entry == nullptr )
+		{
+			const auto loginName = VeyonCore::platform().userFunctions().
+								   queryCurrentUserProperty( PlatformUserFunctions::UserProperty::LoginName );
+			if( loginName.isEmpty() == false && loginName != QLatin1String("root") )
+			{
+				entry = getpwnam( loginName.toUtf8().constData() );
+			}
+		}
+
+		if( entry && entry->pw_uid != 0 && entry->pw_dir && *entry->pw_dir )
+		{
+			result.home = QDir::cleanPath( QFile::decodeName( entry->pw_dir ) );
+			result.uid = entry->pw_uid;
+			result.gid = entry->pw_gid;
+
+			// the home of the elevated process may be taken from $HOME (QDir::homePath()) or from the user
+			// database (e.g. QStandardPaths on macOS), possibly with symlinks resolved (/var/root is
+			// /private/var/root on macOS), so all spellings are mapped to the home of the user
+			QStringList processHomes{ QDir::homePath() };
+			const auto rootEntry = getpwuid( geteuid() );
+			if( rootEntry && rootEntry->pw_dir )
+			{
+				processHomes.append( QFile::decodeName( rootEntry->pw_dir ) );
+			}
+			for( const auto& processHome : std::as_const( processHomes ) )
+			{
+				for( const auto& spelling : { QDir::cleanPath( processHome ), QFileInfo( processHome ).canonicalFilePath() } )
+				{
+					if( spelling.isEmpty() == false && spelling != QLatin1String("/") && spelling != result.home &&
+						result.processHomes.contains( spelling ) == false )
+					{
+						result.processHomes.append( spelling );
+					}
+				}
+			}
+
+			vDebug() << "acting on behalf of user with home directory" << result.home;
+		}
+#endif
+		return result;
+	}();
+
+	return user;
+}
+
+
+
+// Maps a path inside the home directory of the elevated process to the same path inside the user's home
+QString toUserPath( const QString& path )
+{
+	const auto& user = elevatingUser();
+	if( user.isValid() == false || path.isEmpty() )
+	{
+		return path;
+	}
+
+	const auto cleanPath = QDir::cleanPath( path );
+	for( const auto& processHome : user.processHomes )
+	{
+		if( cleanPath == processHome || cleanPath.startsWith( processHome + QLatin1Char('/') ) )
+		{
+			return user.home + cleanPath.mid( processHome.length() );
+		}
+	}
+
+	return path;
+}
+
+}
+
+
+
+QString Filesystem::userHomePath() const
+{
+	const auto& user = elevatingUser();
+
+	return user.isValid() ? user.home : QDir::homePath();
+}
+
+
+
+QString Filesystem::userStandardLocation( QStandardPaths::StandardLocation location ) const
+{
+	return toUserPath( QStandardPaths::writableLocation( location ) );
+}
+
+
+
+void Filesystem::transferOwnershipToUser( const QString& filePath ) const
+{
+#ifdef Q_OS_UNIX
+	const auto& user = elevatingUser();
+	if( user.isValid() == false || filePath.isEmpty() )
+	{
+		return;
+	}
+
+	// lchown() doesn't follow symbolic links, so only the file just written can be affected
+	if( lchown( QFile::encodeName( filePath ).constData(), user.uid, user.gid ) != 0 ) // Flawfinder:ignore
+	{
+		vWarning() << "could not transfer ownership of" << filePath << "to the user";
+	}
+#else
+	Q_UNUSED(filePath)
+#endif
+}
+
 
 
 QString Filesystem::expandPath( QString path ) const
@@ -42,25 +205,27 @@ QString Filesystem::expandPath( QString path ) const
 #endif
 
 	const auto& filesystemFunctions = VeyonCore::platform().filesystemFunctions();
+	const auto homePath = userHomePath();
+	const auto personalAppDataPath = toUserPath( filesystemFunctions.personalAppDataPath() );
 	const auto logPath = VeyonCore::platform().coreFunctions().isRunningAsAdmin() ?
 							 filesystemFunctions.globalLogPath() : filesystemFunctions.personalLogPath();
 
 	const auto p = QDir::toNativeSeparators( path.replace( QStringLiteral( "%LOGS%" ), logPath ).
 											 replace( QStringLiteral( "$LOGS" ), logPath ).
-											 replace( QStringLiteral( "%HOME%" ), QDir::homePath() ).
-											 replace( QStringLiteral( "$HOME" ), QDir::homePath() ).
+											 replace( QStringLiteral( "%HOME%" ), homePath ).
+											 replace( QStringLiteral( "$HOME" ), homePath ).
 											 replace( QStringLiteral( "%HOSTNAME%" ), QHostInfo::localHostName() ).
 											 replace( QStringLiteral( "$HOSTNAME" ), QHostInfo::localHostName() ).
-											 replace( QStringLiteral( "%PROFILE%" ), QDir::homePath() ).
-											 replace( QStringLiteral( "$PROFILE" ), QDir::homePath() ).
+											 replace( QStringLiteral( "%PROFILE%" ), homePath ).
+											 replace( QStringLiteral( "$PROFILE" ), homePath ).
 											 replace(QStringLiteral("%USER%"), VeyonCore::platform().userFunctions().queryCurrentUserProperty(PlatformUserFunctions::UserProperty::LoginName)).
-											 replace(QStringLiteral("%DESKTOP%"), QStandardPaths::writableLocation(QStandardPaths::DesktopLocation)).
-											 replace(QStringLiteral("%DOCUMENTS%"), QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)).
-											 replace(QStringLiteral("%DOWNLOADS%"), QStandardPaths::writableLocation(QStandardPaths::DownloadLocation)).
-											 replace(QStringLiteral("%PICTURES%"), QStandardPaths::writableLocation(QStandardPaths::PicturesLocation)).
-											 replace(QStringLiteral("%VIDEOS%"), QStandardPaths::writableLocation(QStandardPaths::MoviesLocation)).
-											 replace( QStringLiteral( "%APPDATA%" ), VeyonCore::platform().filesystemFunctions().personalAppDataPath() ).
-											 replace( QStringLiteral( "$APPDATA" ), VeyonCore::platform().filesystemFunctions().personalAppDataPath() ).
+											 replace(QStringLiteral("%DESKTOP%"), userStandardLocation(QStandardPaths::DesktopLocation)).
+											 replace(QStringLiteral("%DOCUMENTS%"), userStandardLocation(QStandardPaths::DocumentsLocation)).
+											 replace(QStringLiteral("%DOWNLOADS%"), userStandardLocation(QStandardPaths::DownloadLocation)).
+											 replace(QStringLiteral("%PICTURES%"), userStandardLocation(QStandardPaths::PicturesLocation)).
+											 replace(QStringLiteral("%VIDEOS%"), userStandardLocation(QStandardPaths::MoviesLocation)).
+											 replace( QStringLiteral( "%APPDATA%" ), personalAppDataPath ).
+											 replace( QStringLiteral( "$APPDATA" ), personalAppDataPath ).
 											 replace( QStringLiteral( "%GLOBALAPPDATA%" ), VeyonCore::platform().filesystemFunctions().globalAppDataPath() ).
 											 replace( QStringLiteral( "$GLOBALAPPDATA" ), VeyonCore::platform().filesystemFunctions().globalAppDataPath() ).
 											 replace( QStringLiteral( "%TMP%" ), QDir::tempPath() ).
@@ -94,7 +259,7 @@ QString Filesystem::shrinkPath( QString path ) const
 	// the log paths equal the temporary paths on most platforms - map them to %LOGS% only where they are distinct
 	// (macOS) so that %TEMP% keeps its meaning everywhere else
 	auto globalLogPath = QDir::toNativeSeparators(VeyonCore::platform().filesystemFunctions().globalLogPath());
-	auto personalLogPath = QDir::toNativeSeparators(VeyonCore::platform().filesystemFunctions().personalLogPath());
+	auto personalLogPath = QDir::toNativeSeparators(toUserPath(VeyonCore::platform().filesystemFunctions().personalLogPath()));
 	if (globalLogPath == globalTempPath || globalLogPath == tempPath)
 	{
 		globalLogPath.clear();
@@ -103,14 +268,14 @@ QString Filesystem::shrinkPath( QString path ) const
 	{
 		personalLogPath.clear();
 	}
-	const auto personalAppDataPath = VeyonCore::platform().filesystemFunctions().personalAppDataPath();
+	const auto personalAppDataPath = toUserPath(VeyonCore::platform().filesystemFunctions().personalAppDataPath());
 	const auto globalAppDataPath = VeyonCore::platform().filesystemFunctions().globalAppDataPath();
-	const auto desktopPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
-	const auto documentsPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
-	const auto downloadsPath = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
-	const auto picturesPath = QStandardPaths::writableLocation(QStandardPaths::PicturesLocation);
-	const auto videosPath = QStandardPaths::writableLocation(QStandardPaths::MoviesLocation);
-	const auto homePath = QDir::toNativeSeparators(QDir::homePath());
+	const auto desktopPath = userStandardLocation(QStandardPaths::DesktopLocation);
+	const auto documentsPath = userStandardLocation(QStandardPaths::DocumentsLocation);
+	const auto downloadsPath = userStandardLocation(QStandardPaths::DownloadLocation);
+	const auto picturesPath = userStandardLocation(QStandardPaths::PicturesLocation);
+	const auto videosPath = userStandardLocation(QStandardPaths::MoviesLocation);
+	const auto homePath = QDir::toNativeSeparators(userHomePath());
 
 	for (const auto& mapping : {
 			 qMakePair(tempPath, QStringLiteral("TEMP")),
