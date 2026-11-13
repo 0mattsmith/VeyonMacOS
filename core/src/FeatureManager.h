@@ -70,7 +70,7 @@ public:
 					  const ComputerControlInterfaceList& computerControlInterfaces ) const;
 
 	void handleFeatureMessage(ComputerControlInterface::Pointer computerControlInterface,
-							  const FeatureMessage& message) const;
+							  const FeatureMessage& message);
 	void handleFeatureMessage(VeyonServerInterface& server,
 							  const MessageContext& messageContext,
 							  const FeatureMessage& message) const;
@@ -81,6 +81,13 @@ public:
 	void sendAsyncFeatureMessages(VeyonServerInterface& server, const MessageContext& messageContext) const;
 
 	FeatureUidList activeFeatures( VeyonServerInterface& server ) const;
+
+Q_SIGNALS:
+	//! \brief A computer reported that it does not support the given feature (e.g. due to its operating system)
+	void featureNotSupported(ComputerControlInterface::Pointer computerControlInterface,
+							 Feature::Uid featureUid,
+							 const QString& operatingSystem,
+							 Feature::Uid fallbackFeatureUid);
 
 private:
 	FeatureList m_features;

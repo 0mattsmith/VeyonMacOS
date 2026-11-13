@@ -65,6 +65,14 @@ VeyonMaster::VeyonMaster( QObject* parent ) :
 	connect(m_computerControlListModel, &ComputerControlListModel::modelAboutToBeReset,
 			this, &VeyonMaster::computerControlListModelAboutToReset);
 
+	// computers report features they don't support (e.g. due to their operating system) - collect these
+	// reports for a moment in order to show a single message instead of one per computer
+	m_unsupportedFeatureReportTimer.setSingleShot(true);
+	m_unsupportedFeatureReportTimer.setInterval(UnsupportedFeatureReportDelay);
+	connect(&m_unsupportedFeatureReportTimer, &QTimer::timeout, this, &VeyonMaster::showUnsupportedFeatureReports);
+	connect(&VeyonCore::featureManager(), &FeatureManager::featureNotSupported,
+			this, &VeyonMaster::reportUnsupportedFeature);
+
 	if( VeyonCore::config().enforceSelectedModeForClients() )
 	{
 		connect( m_computerControlListModel, &ComputerControlListModel::activeFeaturesChanged,
@@ -292,6 +300,64 @@ void VeyonMaster::shutdown()
 	}
 
 	vDebug() << "finished in" << messageQueueWaitTimer.elapsed() << "ms";
+}
+
+
+
+void VeyonMaster::reportUnsupportedFeature(ComputerControlInterface::Pointer computerControlInterface,
+										   Feature::Uid featureUid,
+										   const QString& operatingSystem,
+										   Feature::Uid fallbackFeatureUid)
+{
+	auto computer = computerControlInterface->computerName();
+	if (operatingSystem.isEmpty() == false)
+	{
+		computer = QStringLiteral("%1 (%2)").arg(computer, operatingSystem);
+	}
+
+	auto& report = m_unsupportedFeatureReports[featureUid];
+	report.fallbackFeatureUid = fallbackFeatureUid;
+	if (report.computers.contains(computer) == false)
+	{
+		report.computers.append(computer);
+	}
+
+	if (m_unsupportedFeatureReportTimer.isActive() == false)
+	{
+		m_unsupportedFeatureReportTimer.start();
+	}
+}
+
+
+
+void VeyonMaster::showUnsupportedFeatureReports()
+{
+	// further reports may arrive while a message box is shown
+	const auto reports = m_unsupportedFeatureReports;
+	m_unsupportedFeatureReports.clear();
+
+	for (auto it = reports.constBegin(), end = reports.constEnd(); it != end; ++it)
+	{
+		const auto& feature = VeyonCore::featureManager().feature(it.key());
+		const auto& fallbackFeature = VeyonCore::featureManager().feature(it.value().fallbackFeatureUid);
+		const auto& computers = it.value().computers;
+
+		QString text = tr("\"%1\" is not supported on the following computers:").arg(feature.displayName()) +
+					QStringLiteral("\n\n") +
+					QStringList(computers.mid(0, MaximumListedComputers)).join(QLatin1Char('\n'));
+
+		if (computers.size() > MaximumListedComputers)
+		{
+			text += QLatin1Char('\n') + tr("and %n more", nullptr, int(computers.size() - MaximumListedComputers));
+		}
+
+		if (fallbackFeature.isValid())
+		{
+			text += QStringLiteral("\n\n") + tr("\"%1\" was performed instead.").arg(fallbackFeature.displayName());
+		}
+
+		QMessageBox::warning(m_mainWindow, feature.displayName(), text);
+	}
 }
 
 

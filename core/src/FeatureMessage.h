@@ -46,6 +46,15 @@ public:
 		Default = 0,
 		Invalid = -1,
 		Init = -2,
+		//! reply from a server telling that the feature is not supported on that computer (e.g. its operating system)
+		NotSupported = -3,
+	};
+
+	//! arguments of a reply with Command::NotSupported
+	enum class NotSupportedArgument
+	{
+		OperatingSystem,
+		FallbackFeature,
 	};
 
 	FeatureMessage() = default;

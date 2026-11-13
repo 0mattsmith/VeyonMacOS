@@ -131,11 +131,15 @@ bool UserSessionControlPlugin::handleFeatureMessage( VeyonServerInterface& serve
 													 const MessageContext& messageContext,
 													 const FeatureMessage& message )
 {
-	Q_UNUSED(server)
-	Q_UNUSED(messageContext)
-
 	if( message.featureUid() == m_userLoginFeature.uid() )
 	{
+		if( VeyonCore::platform().userFunctions().isLogonSupported() == false )
+		{
+			vWarning() << "remote logon is not supported on this platform";
+			sendFeatureNotSupportedReply( server, messageContext, message.featureUid() );
+			return true;
+		}
+
 		VeyonCore::platform().userFunctions().prepareLogon( message.argument( Argument::Username ).toString(),
 															VeyonCore::cryptoCore().decryptPassword(
 																message.argument( Argument::Password ).toString() ) );

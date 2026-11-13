@@ -121,7 +121,10 @@ void MacOsCoreFunctions::reboot()
 
 void MacOsCoreFunctions::powerDown( bool installUpdates )
 {
-	Q_UNUSED(installUpdates)
+	if( installUpdates )
+	{
+		vWarning() << "installing updates is not supported on macOS - powering down without installing updates";
+	}
 
 	if( isRunningAsAdmin() )
 	{

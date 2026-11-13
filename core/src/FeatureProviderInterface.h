@@ -24,15 +24,17 @@
 
 #pragma once
 
+#include <QSysInfo>
+
 #include "ComputerControlInterface.h"
 #include "EnumHelper.h"
 #include "FeatureMessage.h"
 #include "Feature.h"
 #include "MessageContext.h"
 #include "PluginInterface.h"
+#include "VeyonServerInterface.h"
 
 class VeyonMasterInterface;
-class VeyonServerInterface;
 class VeyonWorkerInterface;
 
 // clazy:excludeall=copyable-polymorphic
@@ -197,6 +199,24 @@ protected:
 		{
 			controlInterface->sendFeatureMessage(message);
 		}
+	}
+
+	/*!
+	 * \brief Tells the master that a feature is not supported on this computer (e.g. by its operating system)
+	 * \param server a reference to a server instance implementing the VeyonServerInterface
+	 * \param messageContext the context of the message which requested the feature
+	 * \param featureUid the UID of the feature which is not supported
+	 * \param fallbackFeatureUid the UID of a feature which has been performed instead (optional)
+	 */
+	bool sendFeatureNotSupportedReply(VeyonServerInterface& server, const MessageContext& messageContext,
+									  Feature::Uid featureUid, Feature::Uid fallbackFeatureUid = {})
+	{
+		return server.sendFeatureMessageReply(messageContext,
+											  FeatureMessage{featureUid, FeatureMessage::Command::NotSupported}
+											  .addArgument(FeatureMessage::NotSupportedArgument::OperatingSystem,
+														   QSysInfo::prettyProductName())
+											  .addArgument(FeatureMessage::NotSupportedArgument::FallbackFeature,
+														   fallbackFeatureUid));
 	}
 
 };
