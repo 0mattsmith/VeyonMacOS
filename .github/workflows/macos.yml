@@ -162,8 +162,10 @@ jobs:
           sudo launchctl print system/io.veyon.veyon-service | grep -E "state|pid"
           pgrep -lx veyon-server || echo "(veyon-server is not running)"
 
-          # an authentication key readable by the runner user lets Veyon Master get past the authentication check
-          # and show its main window (the screenshot below shows its toolbar)
+          # key file authentication with a key readable by the runner user lets Veyon Master get past the
+          # authentication check (instead of asking for a username and password) and show its main window -
+          # the screenshot below shows its toolbar
+          sudo "$cli" config set Authentication/Method 1
           sudo "$cli" authkeys create teacher
           sudo "$cli" authkeys setaccessgroup teacher/private "$(id -gn)"
 
