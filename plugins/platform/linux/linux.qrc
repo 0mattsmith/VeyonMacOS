@@ -1,5 +1,14 @@
 <RCC>
-    <qresource prefix="/linux" >
-        <file>tux.png</file>
+    <qresource prefix="/icons/veyon-modern">
+        <file alias="scalable/veyon-linux.png">icons/modern/veyon-linux.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-monochrome">
+        <file alias="scalable/veyon-linux.png">icons/monochrome/veyon-linux.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-monochrome-dark">
+        <file alias="scalable/veyon-linux.png">icons/monochrome-dark/veyon-linux.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-classic">
+        <file alias="scalable/veyon-linux.png">icons/classic/veyon-linux.png</file>
     </qresource>
 </RCC>

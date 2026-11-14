@@ -4,8 +4,19 @@
         <file>computer.png</file>
         <file>configure.png</file>
         <file>distribute-vertical-margin.png</file>
-        <file>application-x-kexi-connectiondata.png</file>
         <file>attribute.png</file>
         <file>folder-stash.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-modern">
+        <file alias="scalable/veyon-ldap.png">icons/modern/veyon-ldap.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-monochrome">
+        <file alias="scalable/veyon-ldap.png">icons/monochrome/veyon-ldap.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-monochrome-dark">
+        <file alias="scalable/veyon-ldap.png">icons/monochrome-dark/veyon-ldap.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-classic">
+        <file alias="scalable/veyon-ldap.png">icons/classic/veyon-ldap.png</file>
     </qresource>
 </RCC>

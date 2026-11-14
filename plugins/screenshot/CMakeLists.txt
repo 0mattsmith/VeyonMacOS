@@ -5,5 +5,4 @@ build_veyon_plugin(screenshot
 	SOURCES
 	ScreenshotFeaturePlugin.cpp
 	ScreenshotFeaturePlugin.h
-	screenshot.qrc
 	)

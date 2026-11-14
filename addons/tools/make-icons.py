@@ -1,24 +1,39 @@
 #!/usr/bin/env python3
 #
-# make-icons.py - generates the PNG icons of the Add-On Store, the bundled add-ons, the Veyon
-#                 features (Master toolbar) and the Configurator pages
+# make-icons.py - generates the icon sets of Veyon: the icons of the Add-On Store, the bundled
+#                 add-ons, the Veyon features (Master toolbar and menus, Master panels, remote
+#                 access window) and the Configurator pages
 #
-# usage: python3 addons/tools/make-icons.py                       (requires Pillow)
-#        python3 addons/tools/make-icons.py --contact-sheet DIR [--before REF]
+# usage: python3 addons/tools/make-icons.py                        (requires Pillow)
+#        python3 addons/tools/make-icons.py --contact-sheet DIR
+#        python3 addons/tools/make-icons.py --restore-classic
 #
-# All icons are drawn at a high resolution and downsampled for smooth edges. They consist of
-# a rounded, gradient filled tile with a white glyph which works on light and dark themes.
+# Every icon exists in each icon set, which are shipped as freedesktop.org icon themes inside the
+# Qt resources (:/icons/veyon-<set>/index.theme and :/icons/veyon-<set>/scalable/<name>.png) and
+# selected with QIcon::setThemeName() in VeyonCore::initUi() (setting "UI/IconTheme"):
 #
-# --contact-sheet writes before/after previews of every generated icon at 16, 20, 32 and 48 px
-# on light and dark backgrounds into DIR. "Before" is the icon as committed in REF (default HEAD).
+#   modern            rounded, gradient filled colour tiles with white glyphs (default)
+#   monochrome        the glyphs of "modern" as flat, dark silhouettes for light colour schemes
+#   monochrome-dark   the same silhouettes in a light colour for dark colour schemes
+#   classic           the original (KDE Breeze) icons of Veyon, restored from git history with
+#                     --restore-classic, plus Breeze style icons for the add-ons drawn here
+#
+# The PNGs are written to <library>/icons/<set>/<name>.png. The script also writes the
+# index.theme files (core/resources/icons/<set>/) and the icon theme sections of the .qrc files,
+# so adding an icon to ICONS is all that is needed to ship it in every set.
+#
+# --contact-sheet writes previews of every icon in all sets at 16, 20, 32 and 48 px on light and
+# dark backgrounds into DIR.
 
 import argparse
 import io
 import math
 import os
+import re
 import subprocess
 
 from PIL import Image, ImageChops, ImageDraw, ImageFont
+
 
 SCALE = 4
 SIZE = 128
@@ -52,14 +67,6 @@ def p(v):
 
 def width(v):
 	return max(1, int(v * S))
-
-
-def save(img, path):
-	out = img.resize((SIZE, SIZE), Image.LANCZOS)
-	os.makedirs(os.path.dirname(path), exist_ok=True)
-	out.save(path)
-	print("wrote", os.path.relpath(path, ROOT))
-	return out
 
 
 def glyph_puzzle(d, color=WHITE):
@@ -662,6 +669,8 @@ def glyph_windows(c):
 			c.rrect(x, y, x + 0.295, y + 0.295, 0.02)
 
 
+
+
 BLUE = ((54, 176, 214), (25, 120, 168))
 TEAL = ((47, 190, 160), (22, 128, 118))
 ORANGE = ((255, 167, 61), (230, 102, 26))
@@ -677,72 +686,550 @@ def bg(colors):
 	return tuple(colors[1]) + (255,)
 
 
-ADDON_ICONS = [
-	("core/resources/addon-store.png", BLUE, glyph_bag),
-	("core/resources/addon-generic.png", SLATE, glyph_puzzle),
-	("core/resources/addon-script.png", PURPLE, lambda d: glyph_terminal(d, bg(PURPLE))),
-	("addons/taskmanager/resources/taskmanager.png", TEAL, glyph_list_bars),
-	("addons/taskmanager/resources/application-control.png", TEAL, lambda d: glyph_shield(d, "grid", bg(TEAL))),
-	("addons/volumecontrol/resources/volume.png", ORANGE, glyph_volume),
-	("addons/volumecontrol/resources/volume-mute.png", ORANGE, glyph_volume_mute),
-	("addons/volumecontrol/resources/volume-lock.png", ORANGE, lambda d: glyph_volume_lock(d, bg(ORANGE))),
-	("addons/filemanager/resources/filemanager.png", INDIGO, lambda d: glyph_folder_arrows(d, bg(INDIGO))),
-	("addons/internetaccess/resources/internet-access.png", GREEN, glyph_globe),
-	("addons/internetaccess/resources/internet-block.png", RED, lambda d: glyph_globe_block(d, (215, 70, 76, 255))),
-	("addons/websitefilter/resources/website-filter.png", PINK, lambda d: glyph_website_filter(d, bg(PINK))),
-	("addons/webpagesender/resources/webpage-send.png", BLUE, lambda d: glyph_webpage_send(d, bg(BLUE))),
-	("addons/filesender/resources/file-send.png", INDIGO, lambda d: glyph_file_send(d, bg(INDIGO))),
-	("addons/scriptedaddons/resources/scripted-addons.png", PURPLE, lambda d: glyph_terminal(d, bg(PURPLE))),
+# ---------------------------------------------------------------------------------------------
+# Monochrome sets: the coverage mask of the glyph, without the tile and slightly enlarged
+# ---------------------------------------------------------------------------------------------
+
+MONO_LIGHT = (35, 38, 41, 255)		# Breeze "shade black" for light colour schemes
+MONO_DARK = (239, 240, 241, 255)	# Breeze "cardboard grey" for dark colour schemes
+MONO_SCALE = 1.2
+
+
+def glyph_mask(painter):
+	canvas = Canvas()
+	painter(canvas)
+	return canvas.mask
+
+
+def tile_glyph_mask(painter):
+	"""coverage mask of an add-on glyph drawn with ImageDraw: white parts are the glyph,
+	parts painted in the tile colour are cut-outs"""
+	img = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+	painter(ImageDraw.Draw(img))
+	r, g, b, a = img.split()
+	white = ImageChops.darker(ImageChops.darker(r, g), b).point(lambda v: 255 if v >= 250 else 0)
+	return ImageChops.multiply(white, a)
+
+
+def monochrome(mask, color):
+	big = int(S * MONO_SCALE)
+	offset = (big - S) // 2
+	mask = mask.resize((big, big), Image.BICUBIC).crop((offset, offset, offset + S, offset + S))
+	img = Image.new("RGBA", (S, S), color)
+	img.putalpha(mask)
+	return img
+
+
+# ---------------------------------------------------------------------------------------------
+# Classic set: Breeze style icons for the add-ons, matching the original icons of Veyon (flat
+# shapes with a subtle vertical gradient, white glyphs and a long shadow towards the bottom right)
+# ---------------------------------------------------------------------------------------------
+
+# colours sampled from the original icons
+B_BLUE = ((32, 184, 249), (26, 129, 242))
+B_GREEN = ((117, 215, 6), (68, 160, 4))
+B_ORANGE = ((255, 197, 53), (236, 148, 17))
+B_RED = ((219, 42, 63), (200, 22, 38))
+B_TEAL = ((26, 188, 156), (17, 140, 118))
+B_SEA = ((28, 170, 250), (27, 118, 230))
+B_LAND = ((163, 246, 193), (90, 218, 135))
+B_SCREEN = ((49, 54, 59), (35, 38, 41))
+B_FRAME = ((189, 195, 199), (149, 160, 163))
+B_PAPER = ((252, 252, 252), (232, 234, 236))
+B_DARK_BLUE = (21, 102, 196)
+B_DARK_GREEN = (52, 120, 3)
+B_GREY = (77, 77, 77)
+B_PAPER_EDGE = (189, 195, 199)
+SHADOW_OPACITY = 0.2
+
+_gradients = {}
+
+
+def vgradient(colors):
+	if colors not in _gradients:
+		top, bottom = colors
+		column = Image.new("RGBA", (1, S))
+		for y in range(S):
+			t = y / (S - 1)
+			column.putpixel((0, y), tuple(int(top[i] + (bottom[i] - top[i]) * t) for i in range(3)) + (255,))
+		_gradients[colors] = column.resize((S, S), Image.NEAREST)
+	return _gradients[colors]
+
+
+def shape(painter):
+	return glyph_mask(painter)
+
+
+def fill(mask, colors):
+	img = vgradient(colors).copy()
+	img.putalpha(mask)
+	return img
+
+
+def solid(mask, color, opacity=1.0):
+	img = Image.new("RGBA", (S, S), tuple(color[:3]) + (255,))
+	img.putalpha(mask if opacity >= 1.0 else mask.point(lambda v: int(v * opacity)))
+	return img
+
+
+def shifted(mask, dx, dy):
+	out = Image.new("L", (S, S), 0)
+	out.paste(mask, (dx, dy))
+	return out
+
+
+def long_shadow(glyph, clip):
+	"""shadow cast by the glyph towards the bottom right up to the edge of the clip shape"""
+	shadow = glyph
+	d = 1
+	while d < S:
+		shadow = ImageChops.lighter(shadow, shifted(shadow, d, d))
+		d *= 2
+	return solid(ImageChops.multiply(shadow, clip), (0, 0, 0), SHADOW_OPACITY)
+
+
+def compose(*layers):
+	img = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+	for layer in layers:
+		img.alpha_composite(layer)
+	return img
+
+
+def emblem(base, colors, glyph, glyph_color=WHITE):
+	"""base shape with a glyph and its long shadow"""
+	return compose(fill(base, colors), long_shadow(glyph, base), solid(glyph, glyph_color))
+
+
+def circle_emblem(colors, glyph_painter):
+	return emblem(shape(lambda c: c.circle(0.5, 0.5, 0.44)), colors, shape(glyph_painter))
+
+
+def puzzle(c, cx, cy, s):
+	"""puzzle piece of size s centred at cx, cy with two knobs and a socket"""
+	x0, y0 = cx - s / 2, cy - s / 2
+	c.rrect(x0, y0, x0 + s, y0 + s, s * 0.10)
+	c.circle(cx, y0, s * 0.19)
+	c.circle(x0 + s, cy, s * 0.19)
+	c.circle(cx, y0 + s, s * 0.16, OFF)
+
+
+def classic_store():
+	body = shape(lambda c: c.rrect(0.14, 0.32, 0.86, 0.88, 0.06))
+	handle = shape(lambda c: c.arc(0.5, 0.34, 0.17, 180, 360, 0.065))
+	return compose(solid(handle, B_DARK_BLUE), emblem(body, B_BLUE, shape(lambda c: puzzle(c, 0.47, 0.62, 0.24))))
+
+
+def classic_generic():
+	piece = shape(lambda c: puzzle(c, 0.47, 0.54, 0.50))
+	return compose(solid(shifted(piece, 0, p(0.04)), B_DARK_GREEN), fill(piece, B_GREEN))
+
+
+def terminal_prompt(c):
+	c.line([(0.25, 0.43), (0.36, 0.53), (0.25, 0.63)], 0.06)
+	c.line([(0.43, 0.65), (0.62, 0.65)], 0.06)
+
+
+def window_buttons(c):
+	for x in (0.17, 0.25, 0.33):
+		c.circle(x, 0.22, 0.025)
+
+
+def classic_terminal():
+	frame = shape(lambda c: c.rrect(0.08, 0.15, 0.92, 0.85, 0.05))
+	screen = shape(lambda c: c.rect(0.12, 0.29, 0.88, 0.81))
+	return compose(fill(frame, B_FRAME), solid(shape(window_buttons), B_SCREEN[0]),
+				   emblem(screen, B_SCREEN, shape(terminal_prompt), MONO_DARK))
+
+
+def process_list(c):
+	for i, length in enumerate((0.44, 0.30, 0.38)):
+		y = 0.23 + i * 0.10
+		c.circle(0.19, y + 0.025, 0.025)
+		c.rrect(0.25, y, 0.25 + length, y + 0.05, 0.02)
+	c.line([(0.17, 0.60), (0.36, 0.60), (0.43, 0.53), (0.51, 0.63), (0.58, 0.56), (0.83, 0.56)], 0.035)
+
+
+def classic_task_manager():
+	bezel = shape(lambda c: c.rrect(0.06, 0.12, 0.94, 0.72, 0.04))
+	screen = shape(lambda c: c.rect(0.10, 0.16, 0.90, 0.68))
+	neck = shape(lambda c: c.rect(0.44, 0.71, 0.56, 0.80))
+	foot = shape(lambda c: c.rrect(0.28, 0.79, 0.72, 0.86, 0.025))
+	return compose(solid(bezel, B_SCREEN[0]), solid(neck, (127, 140, 141)), solid(foot, B_FRAME[0]),
+				   emblem(screen, B_BLUE, shape(process_list)))
+
+
+def app_rules_grid(c):
+	for x in (0.375, 0.515):
+		for y in (0.33, 0.47):
+			c.rrect(x, y, x + 0.11, y + 0.11, 0.02)
+
+
+def classic_application_control():
+	return emblem(shape(lambda c: shield(c, 0.5, 0.08, 0.72, 0.84)), B_TEAL, shape(app_rules_grid))
+
+
+def speaker(c, dx):
+	c.poly([(0.25 + dx, 0.42), (0.35 + dx, 0.42), (0.49 + dx, 0.29), (0.49 + dx, 0.71), (0.35 + dx, 0.58), (0.25 + dx, 0.58)])
+
+
+def classic_volume(c):
+	speaker(c, -0.03)
+	for r in (0.11, 0.20):
+		c.arc(0.46, 0.5, r, -48, 48, 0.055)
+
+
+def classic_volume_mute(c):
+	speaker(c, -0.04)
+	c.line([(0.57, 0.41), (0.74, 0.59)], 0.06)
+	c.line([(0.57, 0.59), (0.74, 0.41)], 0.06)
+
+
+def classic_volume_lock(c):
+	speaker(c, -0.05)
+	c.arc(0.655, 0.46, 0.06, 180, 360, 0.045, caps=False)
+	c.line([(0.595, 0.46), (0.595, 0.49)], 0.045, caps=False)
+	c.line([(0.715, 0.46), (0.715, 0.49)], 0.045, caps=False)
+	c.rrect(0.56, 0.48, 0.75, 0.64, 0.02)
+
+
+def file_arrows(c):
+	c.line([(0.40, 0.76), (0.40, 0.54)], 0.07, caps=False)
+	c.poly([(0.30, 0.56), (0.40, 0.44), (0.50, 0.56)])
+	c.line([(0.60, 0.46), (0.60, 0.68)], 0.07, caps=False)
+	c.poly([(0.50, 0.66), (0.60, 0.78), (0.70, 0.66)])
+
+
+def folder_back(c):
+	c.rrect(0.08, 0.15, 0.44, 0.32, 0.03)
+	c.rrect(0.08, 0.21, 0.92, 0.86, 0.04)
+
+
+def classic_file_manager():
+	paper = shape(lambda c: c.rect(0.13, 0.26, 0.87, 0.40))
+	front = shape(lambda c: c.rrect(0.08, 0.34, 0.92, 0.86, 0.04))
+	return compose(solid(shape(folder_back), B_DARK_BLUE), fill(paper, B_PAPER), emblem(front, B_BLUE, shape(file_arrows)))
+
+
+CONTINENTS = [
+	[(0.17, 0.32), (0.30, 0.20), (0.44, 0.22), (0.43, 0.32), (0.35, 0.39), (0.37, 0.49), (0.45, 0.55),
+	 (0.42, 0.68), (0.35, 0.84), (0.30, 0.72), (0.27, 0.58), (0.15, 0.48)],
+	[(0.55, 0.17), (0.70, 0.13), (0.84, 0.27), (0.73, 0.33), (0.62, 0.33), (0.59, 0.41), (0.71, 0.44),
+	 (0.83, 0.53), (0.76, 0.68), (0.66, 0.82), (0.60, 0.70), (0.58, 0.56), (0.52, 0.47), (0.51, 0.29)],
 ]
 
-# Related features share a colour: SLATE monitoring/neutral, GREEN demo, PURPLE lock and security,
-# TEAL remote access and screen views, RED power, ORANGE user sessions, BLUE content sent to the
-# students (message, application, website), PINK screenshots, INDIGO files and directories.
-FEATURE_ICONS = [
-	# Master toolbar and feature menus
-	("core/resources/presentation-none.png", SLATE, glyph_screens, "Monitoring"),
-	("plugins/demo/demo.png", GREEN, glyph_presentation, "Demo"),
-	("plugins/demo/presentation-fullscreen.png", GREEN, glyph_screen_fullscreen, "Demo: full screen"),
-	("plugins/demo/presentation-window.png", GREEN, glyph_screen_window, "Demo: window"),
-	("plugins/screenlock/system-lock-screen.png", PURPLE, glyph_padlock, "Lock"),
-	("plugins/remoteaccess/kmag.png", TEAL, glyph_remote_view, "Remote view"),
-	("plugins/remoteaccess/krdc.png", TEAL, glyph_remote_control, "Remote control"),
-	("plugins/powercontrol/preferences-system-power-management.png", RED, glyph_bolt, "Power on"),
-	("plugins/powercontrol/system-reboot.png", RED, glyph_reboot, "Reboot"),
-	("plugins/powercontrol/system-shutdown.png", RED, glyph_power, "Power down"),
-	("plugins/usersessioncontrol/login-user.png", ORANGE, glyph_login, "Log in"),
-	("plugins/usersessioncontrol/logout-user.png", ORANGE, glyph_logout, "Log off"),
-	("plugins/textmessage/dialog-information.png", BLUE, glyph_message, "Text message"),
-	("plugins/screenshot/camera-photo.png", PINK, glyph_camera, "Screenshot"),
-	("plugins/desktopservices/preferences-desktop-launch-feedback.png", BLUE, glyph_start_app, "Start application"),
-	("plugins/desktopservices/internet-web-browser.png", BLUE, glyph_open_website, "Open website"),
-	("plugins/filetransfer/distribute-files.png", INDIGO, glyph_distribute, "File transfer"),
-	("plugins/filetransfer/collect-files.png", INDIGO, glyph_collect, "Collect files"),
+
+def continents(c):
+	for pts in CONTINENTS:
+		c.poly(pts)
+		c.line(pts + [pts[0]], 0.04)
+
+
+def globe_layers(cut=None):
+	sphere = shape(lambda c: c.circle(0.5, 0.5, 0.42))
+	land = ImageChops.multiply(shape(continents), sphere)
+	if cut is not None:
+		sphere = ImageChops.subtract(sphere, cut)
+		land = ImageChops.subtract(land, cut)
+	return fill(sphere, B_SEA), fill(land, B_LAND)
+
+
+def classic_internet_access():
+	return compose(*globe_layers())
+
+
+def classic_internet_block():
+	cut = shape(lambda c: c.circle(0.72, 0.72, 0.25))
+	badge = shape(lambda c: c.circle(0.72, 0.72, 0.205))
+	bar = shape(lambda c: c.rrect(0.61, 0.69, 0.83, 0.75, 0.02))
+	return compose(*globe_layers(cut), emblem(badge, B_RED, bar))
+
+
+def browser_window():
+	outline = shape(lambda c: c.rrect(0.07, 0.13, 0.93, 0.87, 0.035))
+	page = shape(lambda c: c.rrect(0.085, 0.145, 0.915, 0.855, 0.025))
+	title = ImageChops.multiply(shape(lambda c: c.rect(0.07, 0.13, 0.93, 0.30)), outline)
+	dots = shape(lambda c: [c.circle(x, 0.215, 0.025) for x in (0.15, 0.23, 0.31)])
+	return compose(solid(outline, B_PAPER_EDGE), fill(page, B_PAPER), fill(title, B_BLUE), solid(dots, WHITE))
+
+
+def funnel(c):
+	c.poly([(0.30, 0.40), (0.70, 0.40), (0.555, 0.57), (0.555, 0.77), (0.445, 0.71), (0.445, 0.57)])
+
+
+def send_arrow(c):
+	c.line([(0.30, 0.76), (0.60, 0.50)], 0.09)
+	c.poly([(0.72, 0.38), (0.71, 0.64), (0.46, 0.41)])
+
+
+def classic_website_filter():
+	return compose(browser_window(), solid(shape(funnel), B_GREY))
+
+
+def classic_webpage_send():
+	return compose(browser_window(), fill(shape(send_arrow), B_GREEN))
+
+
+def upload_arrow(c):
+	c.line([(0.50, 0.80), (0.50, 0.52)], 0.09, caps=False)
+	c.poly([(0.33, 0.55), (0.50, 0.36), (0.67, 0.55)])
+
+
+def classic_file_send():
+	doc = shape(lambda c: c.poly([(0.18, 0.07), (0.62, 0.07), (0.82, 0.27), (0.82, 0.93), (0.18, 0.93)]))
+	fold = shape(lambda c: c.poly([(0.62, 0.07), (0.62, 0.27), (0.82, 0.27)]))
+	return compose(emblem(ImageChops.subtract(doc, fold), B_BLUE, shape(upload_arrow)), solid(fold, B_DARK_BLUE))
+
+
+# ---------------------------------------------------------------------------------------------
+# Icon table
+# ---------------------------------------------------------------------------------------------
+
+SETS = ("modern", "monochrome", "monochrome-dark", "classic")
+SET_TITLES = {"modern": "Modern", "monochrome": "Monochrome", "monochrome-dark": "Monochrome (dark)", "classic": "Classic"}
+THEME_PREFIX = "veyon-"
+THEME_DIR = "scalable"
+
+# macos-addons right before the Veyon icons were restyled (PR #11): source of the classic originals
+CLASSIC_REF = "56713f6d257472ab7edc979eea7b3797e17efdfb"
+
+
+class Icon:
+	def __init__(self, name, lib, label, modern, mask, classic):
+		self.name = name			# icon theme name
+		self.lib = lib				# directory of the library which ships the icon (icons/<set>/ below it)
+		self.label = label
+		self.modern = modern		# callable returning the image of the modern set
+		self.mask = mask			# callable returning the glyph mask for the monochrome sets
+		self.classic = classic		# callable returning the classic icon, or path of the original in CLASSIC_REF
+
+	def path(self, icon_set):
+		return os.path.join(ROOT, self.lib, "icons", icon_set, self.name + ".png")
+
+
+def tile_icon(name, lib, label, colors, painter, classic):
+	"""add-on icon: glyph drawn with ImageDraw on a tile, classic icon drawn by a classic_* function"""
+	return Icon(name, lib, label, lambda: make(colors, painter), lambda: tile_glyph_mask(painter), classic)
+
+
+def glyph_icon(name, lib, label, colors, painter, original):
+	"""Veyon icon: glyph drawn on a Canvas, classic icon restored from git history"""
+	return Icon(name, lib, label, lambda: make_glyph(colors, painter), lambda: glyph_mask(painter), original)
+
+
+def circle(painter):
+	return lambda: circle_emblem(B_ORANGE, painter)
+
+
+CORE = "core/resources"
+MASTER = "master/resources"
+CONFIGURATOR = "configurator/resources"
+
+ICONS = [
+	# Add-On Store and bundled add-ons
+	tile_icon("veyon-addon-store", CORE, "Add-ons", BLUE, glyph_bag, classic_store),
+	tile_icon("veyon-addon-generic", CORE, "Add-on", SLATE, glyph_puzzle, classic_generic),
+	tile_icon("veyon-addon-script", CORE, "Script add-on", PURPLE, lambda d: glyph_terminal(d, bg(PURPLE)), classic_terminal),
+	tile_icon("veyon-task-manager", "addons/taskmanager/resources", "Task manager", TEAL, glyph_list_bars,
+			  classic_task_manager),
+	tile_icon("veyon-application-control", "addons/taskmanager/resources", "App rules", TEAL,
+			  lambda d: glyph_shield(d, "grid", bg(TEAL)), classic_application_control),
+	tile_icon("veyon-volume", "addons/volumecontrol/resources", "Volume", ORANGE, glyph_volume, circle(classic_volume)),
+	tile_icon("veyon-volume-mute", "addons/volumecontrol/resources", "Mute", ORANGE, glyph_volume_mute,
+			  circle(classic_volume_mute)),
+	tile_icon("veyon-volume-lock", "addons/volumecontrol/resources", "Lock volume", ORANGE,
+			  lambda d: glyph_volume_lock(d, bg(ORANGE)), circle(classic_volume_lock)),
+	tile_icon("veyon-file-manager", "addons/filemanager/resources", "File manager", INDIGO,
+			  lambda d: glyph_folder_arrows(d, bg(INDIGO)), classic_file_manager),
+	tile_icon("veyon-internet-access", "addons/internetaccess/resources", "Internet access", GREEN, glyph_globe,
+			  classic_internet_access),
+	tile_icon("veyon-internet-block", "addons/internetaccess/resources", "Block internet", RED,
+			  lambda d: glyph_globe_block(d, (215, 70, 76, 255)), classic_internet_block),
+	tile_icon("veyon-website-filter", "addons/websitefilter/resources", "Website filter", PINK,
+			  lambda d: glyph_website_filter(d, bg(PINK)), classic_website_filter),
+	tile_icon("veyon-webpage-send", "addons/webpagesender/resources", "Send web page", BLUE,
+			  lambda d: glyph_webpage_send(d, bg(BLUE)), classic_webpage_send),
+	tile_icon("veyon-file-send", "addons/filesender/resources", "Send files", INDIGO,
+			  lambda d: glyph_file_send(d, bg(INDIGO)), classic_file_send),
+	tile_icon("veyon-scripted-addons", "addons/scriptedaddons/resources", "Script add-ons", PURPLE,
+			  lambda d: glyph_terminal(d, bg(PURPLE)), classic_terminal),
+
+	# Master toolbar and feature menus. Related features share a colour: SLATE monitoring/neutral,
+	# GREEN demo, PURPLE lock and security, TEAL remote access and screen views, RED power, ORANGE
+	# user sessions, BLUE content sent to the students (message, application, website), PINK
+	# screenshots, INDIGO files and directories.
+	glyph_icon("veyon-monitoring", CORE, "Monitoring", SLATE, glyph_screens, "core/resources/presentation-none.png"),
+	glyph_icon("veyon-demo", "plugins/demo", "Demo", GREEN, glyph_presentation, "plugins/demo/demo.png"),
+	glyph_icon("veyon-demo-fullscreen", "plugins/demo", "Demo: full screen", GREEN, glyph_screen_fullscreen,
+			   "plugins/demo/presentation-fullscreen.png"),
+	glyph_icon("veyon-demo-window", "plugins/demo", "Demo: window", GREEN, glyph_screen_window,
+			   "plugins/demo/presentation-window.png"),
+	glyph_icon("veyon-screen-lock", "plugins/screenlock", "Lock", PURPLE, glyph_padlock,
+			   "plugins/screenlock/system-lock-screen.png"),
+	glyph_icon("veyon-remote-view", "plugins/remoteaccess", "Remote view", TEAL, glyph_remote_view,
+			   "plugins/remoteaccess/kmag.png"),
+	glyph_icon("veyon-remote-control", "plugins/remoteaccess", "Remote control", TEAL, glyph_remote_control,
+			   "plugins/remoteaccess/krdc.png"),
+	glyph_icon("veyon-power-on", "plugins/powercontrol", "Power on", RED, glyph_bolt,
+			   "plugins/powercontrol/preferences-system-power-management.png"),
+	glyph_icon("veyon-reboot", "plugins/powercontrol", "Reboot", RED, glyph_reboot, "plugins/powercontrol/system-reboot.png"),
+	glyph_icon("veyon-power-down", "plugins/powercontrol", "Power down", RED, glyph_power,
+			   "plugins/powercontrol/system-shutdown.png"),
+	glyph_icon("veyon-log-in", "plugins/usersessioncontrol", "Log in", ORANGE, glyph_login,
+			   "plugins/usersessioncontrol/login-user.png"),
+	glyph_icon("veyon-log-off", "plugins/usersessioncontrol", "Log off", ORANGE, glyph_logout,
+			   "plugins/usersessioncontrol/logout-user.png"),
+	glyph_icon("veyon-text-message", "plugins/textmessage", "Text message", BLUE, glyph_message,
+			   "plugins/textmessage/dialog-information.png"),
+	glyph_icon("veyon-screenshot", CORE, "Screenshot", PINK, glyph_camera, "plugins/screenshot/camera-photo.png"),
+	glyph_icon("veyon-start-app", "plugins/desktopservices", "Start application", BLUE, glyph_start_app,
+			   "plugins/desktopservices/preferences-desktop-launch-feedback.png"),
+	glyph_icon("veyon-open-website", "plugins/desktopservices", "Open website", BLUE, glyph_open_website,
+			   "plugins/desktopservices/internet-web-browser.png"),
+	glyph_icon("veyon-file-transfer", "plugins/filetransfer", "File transfer", INDIGO, glyph_distribute,
+			   "plugins/filetransfer/distribute-files.png"),
+	glyph_icon("veyon-collect-files", "plugins/filetransfer", "Collect files", INDIGO, glyph_collect,
+			   "plugins/filetransfer/collect-files.png"),
 	# Master window panels
-	("master/resources/computers.png", INDIGO, glyph_location_computers, "Locations & computers"),
-	("master/resources/camera-photo.png", PINK, glyph_camera, "Screenshots"),
-	("master/resources/computer-slideshow.png", TEAL, glyph_slideshow, "Slideshow"),
-	("master/resources/spotlight.png", ORANGE, glyph_spotlight, "Spotlight"),
+	glyph_icon("veyon-locations-computers", MASTER, "Locations & computers", INDIGO, glyph_location_computers,
+			   "master/resources/computers.png"),
+	glyph_icon("veyon-slideshow", MASTER, "Slideshow", TEAL, glyph_slideshow, "master/resources/computer-slideshow.png"),
+	glyph_icon("veyon-spotlight", MASTER, "Spotlight", ORANGE, glyph_spotlight, "master/resources/spotlight.png"),
 	# remote access window
-	("plugins/remoteaccess/preferences-system-windows-effect-desktopgrid.png", TEAL, glyph_select_screen, "Select screen"),
-	("plugins/remoteaccess/preferences-desktop-keyboard.png", TEAL, glyph_keyboard, "Send shortcut"),
-	("plugins/remoteaccess/camera-photo.png", PINK, glyph_camera, "Screenshot"),
-	("plugins/remoteaccess/application-exit.png", SLATE, glyph_close, "Exit"),
+	glyph_icon("veyon-select-screen", "plugins/remoteaccess", "Select screen", TEAL, glyph_select_screen,
+			   "plugins/remoteaccess/preferences-system-windows-effect-desktopgrid.png"),
+	glyph_icon("veyon-send-shortcut", "plugins/remoteaccess", "Send shortcut", TEAL, glyph_keyboard,
+			   "plugins/remoteaccess/preferences-desktop-keyboard.png"),
+	glyph_icon("veyon-exit", "plugins/remoteaccess", "Exit", SLATE, glyph_close, "plugins/remoteaccess/application-exit.png"),
 	# Configurator pages
-	("configurator/resources/configure-shortcuts.png", SLATE, glyph_sliders, "General"),
-	("configurator/resources/application-x-sharedlib.png", TEAL, glyph_cog, "Service"),
-	("configurator/resources/application-x-ms-dos-executable.png", BLUE, glyph_monitor_grid, "Master"),
-	("configurator/resources/network-vpn.png", PURPLE, glyph_shield_keyhole, "Access control"),
-	("core/resources/application-x-pem-key.png", PURPLE, glyph_key, "Authentication keys"),
-	("plugins/builtindirectory/builtindirectory.png", INDIGO, glyph_location_computers, "Locations & computers"),
-	("plugins/ldap/application-x-kexi-connectiondata.png", INDIGO, glyph_tree, "LDAP"),
-	("plugins/demo/window-duplicate.png", GREEN, glyph_screens_overlapping, "Demo server"),
-	("plugins/desktopservices/desktop-services.png", BLUE, glyph_desktop_services, "Desktop services"),
-	("plugins/filetransfer/distribute-files-dark.png", INDIGO, glyph_distribute, "File transfer"),
-	("plugins/webapi/webapi.png", TEAL, glyph_code, "Web API"),
-	("plugins/platform/linux/tux.png", SLATE, glyph_penguin, "Linux"),
-	("plugins/platform/windows/windows-logo.png", BLUE, glyph_windows, "Windows"),
+	glyph_icon("veyon-config-general", CONFIGURATOR, "General", SLATE, glyph_sliders,
+			   "configurator/resources/configure-shortcuts.png"),
+	glyph_icon("veyon-config-service", CONFIGURATOR, "Service", TEAL, glyph_cog,
+			   "configurator/resources/application-x-sharedlib.png"),
+	glyph_icon("veyon-config-master", CONFIGURATOR, "Master", BLUE, glyph_monitor_grid,
+			   "configurator/resources/application-x-ms-dos-executable.png"),
+	glyph_icon("veyon-config-access-control", CONFIGURATOR, "Access control", PURPLE, glyph_shield_keyhole,
+			   "configurator/resources/network-vpn.png"),
+	glyph_icon("veyon-authentication-keys", CORE, "Authentication keys", PURPLE, glyph_key,
+			   "core/resources/application-x-pem-key.png"),
+	glyph_icon("veyon-builtin-directory", "plugins/builtindirectory", "Locations & computers", INDIGO,
+			   glyph_location_computers, "plugins/builtindirectory/builtindirectory.png"),
+	glyph_icon("veyon-ldap", "plugins/ldap", "LDAP", INDIGO, glyph_tree, "plugins/ldap/application-x-kexi-connectiondata.png"),
+	glyph_icon("veyon-demo-server", "plugins/demo", "Demo server", GREEN, glyph_screens_overlapping,
+			   "plugins/demo/window-duplicate.png"),
+	glyph_icon("veyon-desktop-services", "plugins/desktopservices", "Desktop services", BLUE, glyph_desktop_services,
+			   "plugins/desktopservices/desktop-services.png"),
+	glyph_icon("veyon-file-transfer-settings", "plugins/filetransfer", "File transfer", INDIGO, glyph_distribute,
+			   "plugins/filetransfer/distribute-files-dark.png"),
+	glyph_icon("veyon-web-api", "plugins/webapi", "Web API", TEAL, glyph_code, "plugins/webapi/webapi.png"),
+	glyph_icon("veyon-linux", "plugins/platform/linux", "Linux", SLATE, glyph_penguin, "plugins/platform/linux/tux.png"),
+	glyph_icon("veyon-windows", "plugins/platform/windows", "Windows", BLUE, glyph_windows,
+			   "plugins/platform/windows/windows-logo.png"),
 ]
+
+
+# ---------------------------------------------------------------------------------------------
+# output: PNGs, index.theme files and the icon theme sections of the .qrc files
+# ---------------------------------------------------------------------------------------------
+
+def save(img, path):
+	out = img.resize((SIZE, SIZE), Image.LANCZOS)
+	os.makedirs(os.path.dirname(path), exist_ok=True)
+	out.save(path)
+	print("wrote", os.path.relpath(path, ROOT).replace(os.sep, "/"))
+	return out
+
+
+def git_show(ref, path):
+	try:
+		return subprocess.run(["git", "-C", ROOT, "show", f"{ref}:{path}"], capture_output=True, check=True).stdout
+	except (OSError, subprocess.CalledProcessError):
+		return None
+
+
+def restore_classic(icon):
+	data = git_show(CLASSIC_REF, icon.classic)
+	if data is None:
+		raise SystemExit(f"could not read {icon.classic} from {CLASSIC_REF}")
+	path = icon.path("classic")
+	os.makedirs(os.path.dirname(path), exist_ok=True)
+	with open(path, "wb") as f:
+		f.write(data)
+	print("restored", os.path.relpath(path, ROOT).replace(os.sep, "/"))
+
+
+def write_index_themes():
+	for icon_set in SETS:
+		lines = [
+			"[Icon Theme]",
+			f"Name=Veyon {SET_TITLES[icon_set]}",
+			"Comment=Icons of Veyon (generated by addons/tools/make-icons.py)",
+		]
+		if icon_set != "modern":
+			lines.append(f"Inherits={THEME_PREFIX}modern")
+		lines += [f"Directories={THEME_DIR}", "", f"[{THEME_DIR}]", "Size=128", "MinSize=8", "MaxSize=512", "Type=Scalable", ""]
+		path = os.path.join(ROOT, CORE, "icons", icon_set, "index.theme")
+		os.makedirs(os.path.dirname(path), exist_ok=True)
+		with open(path, "w", newline="\n") as f:
+			f.write("\n".join(lines))
+
+
+def qrc_for(lib):
+	"""the .qrc file of the library: in the icons' directory or one up, named after one of them"""
+	for directory in (lib, os.path.dirname(lib)):
+		for name in (os.path.basename(directory), os.path.basename(os.path.dirname(directory))):
+			path = os.path.join(ROOT, directory, name + ".qrc")
+			if name and os.path.exists(path):
+				return path
+	raise SystemExit(f"no .qrc file found for {lib}")
+
+
+def update_qrc(lib, names):
+	qrc = qrc_for(lib)
+	with open(qrc, newline="") as f:
+		text = f.read()
+	newline = "\r\n" if "\r\n" in text else "\n"
+	indent = re.search(r"^([ \t]*)<qresource", text, re.M)
+	indent = indent.group(1) if indent else "  "
+	text = re.sub(r'[ \t]*<qresource prefix="/icons/' + THEME_PREFIX + r'[^"]*">.*?</qresource>\r?\n', "", text, flags=re.S)
+	prefix = os.path.relpath(os.path.join(ROOT, lib), os.path.dirname(qrc)).replace(os.sep, "/")
+	prefix = "" if prefix == "." else prefix + "/"
+	lines = []
+	for icon_set in SETS:
+		lines.append(f'{indent}<qresource prefix="/icons/{THEME_PREFIX}{icon_set}">')
+		if lib == CORE:
+			lines.append(f'{indent * 2}<file alias="index.theme">{prefix}icons/{icon_set}/index.theme</file>')
+		for name in names:
+			lines.append(f'{indent * 2}<file alias="{THEME_DIR}/{name}.png">{prefix}icons/{icon_set}/{name}.png</file>')
+		lines.append(f"{indent}</qresource>")
+	text = text.replace("</RCC>", newline.join(lines) + newline + "</RCC>")
+	with open(qrc, "w", newline="") as f:
+		f.write(text)
+	print("updated", os.path.relpath(qrc, ROOT).replace(os.sep, "/"))
+
+
+def generate(restore):
+	images = {icon_set: {} for icon_set in SETS}
+	for icon in ICONS:
+		mask = icon.mask()
+		images["modern"][icon.name] = save(icon.modern(), icon.path("modern"))
+		images["monochrome"][icon.name] = save(monochrome(mask, MONO_LIGHT), icon.path("monochrome"))
+		images["monochrome-dark"][icon.name] = save(monochrome(mask, MONO_DARK), icon.path("monochrome-dark"))
+		if callable(icon.classic):
+			images["classic"][icon.name] = save(icon.classic(), icon.path("classic"))
+		else:
+			if restore:
+				restore_classic(icon)
+			if not os.path.exists(icon.path("classic")):
+				raise SystemExit(f"{icon.path('classic')} is missing - run with --restore-classic")
+			images["classic"][icon.name] = Image.open(icon.path("classic")).convert("RGBA")
+
+	write_index_themes()
+	libs = {}
+	for icon in ICONS:
+		libs.setdefault(icon.lib, []).append(icon.name)
+	for lib, names in libs.items():
+		update_qrc(lib, names)
+	return images
 
 
 # ---------------------------------------------------------------------------------------------
@@ -755,43 +1242,27 @@ DARK = (38, 40, 44, 255)
 TEXT_LIGHT = (30, 30, 30, 255)
 TEXT_DARK = (225, 225, 225, 255)
 
+# (title, background, icon set) - the monochrome set is shown in the variant Veyon picks for the background
+COLUMNS = [
+	("Modern", LIGHT, "modern"), ("Modern", DARK, "modern"),
+	("Monochrome", LIGHT, "monochrome"), ("Monochrome", DARK, "monochrome-dark"),
+	("Classic", LIGHT, "classic"), ("Classic", DARK, "classic"),
+]
+
 MASTER_TOOLBAR = [
-	"core/resources/presentation-none.png", "plugins/demo/demo.png", "plugins/screenlock/system-lock-screen.png",
-	"plugins/remoteaccess/kmag.png", "plugins/remoteaccess/krdc.png",
-	"plugins/powercontrol/preferences-system-power-management.png", "plugins/powercontrol/system-reboot.png",
-	"plugins/powercontrol/system-shutdown.png", "plugins/usersessioncontrol/login-user.png",
-	"plugins/usersessioncontrol/logout-user.png", "plugins/textmessage/dialog-information.png",
-	"plugins/screenshot/camera-photo.png", "plugins/desktopservices/preferences-desktop-launch-feedback.png",
-	"plugins/desktopservices/internet-web-browser.png", "plugins/filetransfer/distribute-files.png",
-	"addons/taskmanager/resources/taskmanager.png", "addons/volumecontrol/resources/volume.png",
-	"addons/internetaccess/resources/internet-access.png", "addons/websitefilter/resources/website-filter.png",
-	"addons/webpagesender/resources/webpage-send.png", "addons/filesender/resources/file-send.png",
-	"addons/filemanager/resources/filemanager.png",
+	"veyon-monitoring", "veyon-demo", "veyon-screen-lock", "veyon-remote-view", "veyon-remote-control",
+	"veyon-power-on", "veyon-reboot", "veyon-power-down", "veyon-log-in", "veyon-log-off", "veyon-text-message",
+	"veyon-screenshot", "veyon-start-app", "veyon-open-website", "veyon-file-transfer", "veyon-task-manager",
+	"veyon-volume", "veyon-internet-access", "veyon-website-filter", "veyon-webpage-send", "veyon-file-send",
+	"veyon-file-manager",
 ]
 
 CONFIGURATOR_PAGES = [
-	"core/resources/addon-store.png", "configurator/resources/configure-shortcuts.png",
-	"configurator/resources/application-x-sharedlib.png", "configurator/resources/application-x-ms-dos-executable.png",
-	"configurator/resources/network-vpn.png", "core/resources/application-x-pem-key.png",
-	"plugins/builtindirectory/builtindirectory.png", "plugins/demo/window-duplicate.png",
-	"plugins/desktopservices/desktop-services.png", "plugins/filetransfer/distribute-files-dark.png",
-	"plugins/ldap/application-x-kexi-connectiondata.png", "plugins/platform/windows/windows-logo.png",
-	"plugins/platform/linux/tux.png", "plugins/webapi/webapi.png",
-	"addons/filemanager/resources/filemanager.png", "addons/internetaccess/resources/internet-access.png",
-	"addons/scriptedaddons/resources/scripted-addons.png", "addons/websitefilter/resources/website-filter.png",
+	"veyon-addon-store", "veyon-config-general", "veyon-config-service", "veyon-config-master",
+	"veyon-config-access-control", "veyon-authentication-keys", "veyon-builtin-directory", "veyon-demo-server",
+	"veyon-desktop-services", "veyon-file-transfer-settings", "veyon-ldap", "veyon-windows", "veyon-linux",
+	"veyon-web-api", "veyon-file-manager", "veyon-internet-access", "veyon-scripted-addons", "veyon-website-filter",
 ]
-
-ADDON_LABELS = {
-	"core/resources/addon-store.png": "Add-ons",
-	"addons/taskmanager/resources/taskmanager.png": "Task manager",
-	"addons/volumecontrol/resources/volume.png": "Volume",
-	"addons/internetaccess/resources/internet-access.png": "Internet access",
-	"addons/websitefilter/resources/website-filter.png": "Website filter",
-	"addons/webpagesender/resources/webpage-send.png": "Send web page",
-	"addons/filesender/resources/file-send.png": "Send files",
-	"addons/filemanager/resources/filemanager.png": "File manager",
-	"addons/scriptedaddons/resources/scripted-addons.png": "Script add-ons",
-}
 
 
 def font(size):
@@ -806,106 +1277,92 @@ def scaled(img, size):
 	return img.resize((size, size), Image.BOX)
 
 
-def committed_image(ref, path):
-	try:
-		data = subprocess.run(["git", "-C", ROOT, "show", f"{ref}:{path}"], capture_output=True, check=True).stdout
-	except (OSError, subprocess.CalledProcessError):
-		return None
-	return Image.open(io.BytesIO(data)).convert("RGBA")
+def text(d, xy, s, size, fill_color):
+	d.text(xy, s, font=font(size), fill=fill_color)
 
 
-def text(d, xy, s, size, fill):
-	d.text(xy, s, font=font(size), fill=fill)
+def foreground(background):
+	return TEXT_LIGHT if background == LIGHT else TEXT_DARK
 
 
-def size_matrix(rows, before, after, title):
-	"""every icon at all preview sizes, before and after, on light and dark backgrounds"""
+def background_name(background):
+	return "light" if background == LIGHT else "dark"
+
+
+def size_matrix(names, labels, images, title):
+	"""every icon of every set at all preview sizes on light and dark backgrounds"""
 	strip_w = sum(PREVIEW_SIZES) + 12 * (len(PREVIEW_SIZES) + 1)
-	label_w, row_h, head_h = 250, 64, 64
-	groups = [("before", LIGHT, before), ("before", DARK, before), ("after", LIGHT, after), ("after", DARK, after)]
-	sheet = Image.new("RGBA", (label_w + len(groups) * (strip_w + 8), head_h + row_h * len(rows)), (255, 255, 255, 255))
+	label_w, row_h, head_h = 230, 64, 64
+	sheet = Image.new("RGBA", (label_w + len(COLUMNS) * (strip_w + 8), head_h + row_h * len(names)), (255, 255, 255, 255))
 	d = ImageDraw.Draw(sheet)
-	text(d, (12, 10), title, 20, TEXT_LIGHT)
-	for gi, (name, background, _) in enumerate(groups):
-		x = label_w + gi * (strip_w + 8)
-		text(d, (x + 12, 38), f"{name}, {'light' if background == LIGHT else 'dark'}  ({'/'.join(map(str, PREVIEW_SIZES))} px)", 13, TEXT_LIGHT)
-	for ri, (path, label) in enumerate(rows):
+	text(d, (12, 10), f"{title} ({'/'.join(map(str, PREVIEW_SIZES))} px)", 20, TEXT_LIGHT)
+	for ci, (column_title, background, _) in enumerate(COLUMNS):
+		x = label_w + ci * (strip_w + 8)
+		text(d, (x + 12, 38), f"{column_title}, {background_name(background)}", 14, TEXT_LIGHT)
+	for ri, name in enumerate(names):
 		y = head_h + ri * row_h
-		text(d, (12, y + 14), label, 15, TEXT_LIGHT)
-		text(d, (12, y + 36), path.split("/")[-1], 11, (110, 110, 110, 255))
-		for gi, (_, background, images) in enumerate(groups):
-			x = label_w + gi * (strip_w + 8)
+		text(d, (12, y + 14), labels[name], 15, TEXT_LIGHT)
+		text(d, (12, y + 36), name, 11, (110, 110, 110, 255))
+		for ci, (_, background, icon_set) in enumerate(COLUMNS):
+			x = label_w + ci * (strip_w + 8)
 			d.rectangle([x, y, x + strip_w, y + row_h - 1], fill=background)
-			img = images.get(path)
-			if img is None:
-				continue
 			ix = x + 12
 			for s in PREVIEW_SIZES:
-				sheet.alpha_composite(scaled(img, s), (ix, y + (row_h - s) // 2))
+				sheet.alpha_composite(scaled(images[icon_set][name], s), (ix, y + (row_h - s) // 2))
 				ix += s + 12
 	return sheet
 
 
-def toolbar_mockup(paths, labels, before, after):
-	"""the Master toolbar at 32 px, before and after"""
-	cell_w, icon, pad = 84, 32, 14
-	rows = [("before", LIGHT, before), ("after", LIGHT, after), ("before", DARK, before), ("after", DARK, after)]
+def toolbar_mockup(names, labels, images):
+	"""the Master toolbar at 32 px in every set"""
+	cell_w, icon, pad, label_w = 84, 32, 14, 130
 	row_h = icon + 46
-	sheet = Image.new("RGBA", (70 + cell_w * len(paths) + pad, pad + row_h * len(rows)), (255, 255, 255, 255))
+	sheet = Image.new("RGBA", (label_w + cell_w * len(names) + pad, pad + row_h * len(COLUMNS)), (255, 255, 255, 255))
 	d = ImageDraw.Draw(sheet)
-	for ri, (name, background, images) in enumerate(rows):
+	for ri, (column_title, background, icon_set) in enumerate(COLUMNS):
 		y = pad + ri * row_h
 		d.rectangle([0, y, sheet.width, y + row_h - 4], fill=background)
-		fg = TEXT_LIGHT if background == LIGHT else TEXT_DARK
-		text(d, (10, y + 12), name, 13, fg)
-		for i, path in enumerate(paths):
-			x = 70 + i * cell_w
-			img = images.get(path)
-			if img is not None:
-				sheet.alpha_composite(scaled(img, icon), (x + (cell_w - icon) // 2, y + 6))
-			label = labels.get(path, "")
+		fg = foreground(background)
+		text(d, (10, y + 12), column_title, 14, fg)
+		text(d, (10, y + 32), background_name(background), 12, fg)
+		for i, name in enumerate(names):
+			x = label_w + i * cell_w
+			sheet.alpha_composite(scaled(images[icon_set][name], icon), (x + (cell_w - icon) // 2, y + 6))
+			label = labels[name]
 			tw = d.textlength(label, font=font(11))
 			text(d, (x + (cell_w - tw) / 2, y + icon + 14), label, 11, fg)
 	return sheet
 
 
-def page_list_mockup(paths, labels, before, after):
-	"""the Configurator's page list at 48 px, before and after"""
-	col_w, icon, row_h = 290, 48, 58
-	cols = [("before", LIGHT, before), ("after", LIGHT, after), ("before", DARK, before), ("after", DARK, after)]
-	sheet = Image.new("RGBA", (col_w * len(cols), 36 + row_h * len(paths)), (255, 255, 255, 255))
+def page_list_mockup(names, labels, images):
+	"""the Configurator's page list at 48 px in every set"""
+	col_w, icon, row_h = 260, 48, 58
+	sheet = Image.new("RGBA", (col_w * len(COLUMNS), 40 + row_h * len(names)), (255, 255, 255, 255))
 	d = ImageDraw.Draw(sheet)
-	for ci, (name, background, images) in enumerate(cols):
+	for ci, (column_title, background, icon_set) in enumerate(COLUMNS):
 		x = ci * col_w
 		d.rectangle([x + 4, 0, x + col_w - 4, sheet.height], fill=background)
-		fg = TEXT_LIGHT if background == LIGHT else TEXT_DARK
-		text(d, (x + 14, 10), name, 14, fg)
-		for ri, path in enumerate(paths):
-			y = 36 + ri * row_h
-			img = images.get(path)
-			if img is not None:
-				sheet.alpha_composite(scaled(img, icon), (x + 14, y + (row_h - icon) // 2))
-			text(d, (x + 14 + icon + 12, y + row_h // 2 - 9), labels.get(path, ""), 15, fg)
+		fg = foreground(background)
+		text(d, (x + 14, 10), f"{column_title}, {background_name(background)}", 14, fg)
+		for ri, name in enumerate(names):
+			y = 40 + ri * row_h
+			sheet.alpha_composite(scaled(images[icon_set][name], icon), (x + 14, y + (row_h - icon) // 2))
+			text(d, (x + 14 + icon + 12, y + row_h // 2 - 9), labels[name], 15, fg)
 	return sheet
 
 
-def write_contact_sheets(out_dir, generated, ref):
+def write_contact_sheets(out_dir, images):
 	os.makedirs(out_dir, exist_ok=True)
-	labels = dict(ADDON_LABELS)
-	for path, _, _, label in FEATURE_ICONS:
-		labels.setdefault(path, label)
-	paths = set(generated) | set(MASTER_TOOLBAR) | set(CONFIGURATOR_PAGES)
-	before = {path: committed_image(ref, path) for path in paths}
-	after = {path: generated.get(path) or Image.open(os.path.join(ROOT, path)).convert("RGBA") for path in paths}
-
+	labels = {icon.name: icon.label for icon in ICONS}
+	addons = [icon.name for icon in ICONS if callable(icon.classic)]
+	features = [icon.name for icon in ICONS if not callable(icon.classic) and icon.name not in CONFIGURATOR_PAGES]
 	sheets = {
-		"master-toolbar.png": toolbar_mockup(MASTER_TOOLBAR, labels, before, after),
-		"configurator-pages.png": page_list_mockup(CONFIGURATOR_PAGES, labels, before, after),
-		"sizes-master.png": size_matrix([(path, label) for path, _, _, label in FEATURE_ICONS
-										 if not path.startswith("configurator/") and path not in CONFIGURATOR_PAGES],
-										before, after, "Master toolbar, feature menus, Master panels and remote access window"),
-		"sizes-configurator.png": size_matrix([(path, labels[path]) for path in CONFIGURATOR_PAGES],
-											  before, after, "Configurator pages"),
+		"master-toolbar.png": toolbar_mockup(MASTER_TOOLBAR, labels, images),
+		"configurator-pages.png": page_list_mockup(CONFIGURATOR_PAGES, labels, images),
+		"sizes-addons.png": size_matrix(addons, labels, images, "Add-On Store and add-ons"),
+		"sizes-master.png": size_matrix(features, labels, images,
+										"Master toolbar, feature menus, Master panels and remote access window"),
+		"sizes-configurator.png": size_matrix(CONFIGURATOR_PAGES, labels, images, "Configurator pages"),
 	}
 	for name, sheet in sheets.items():
 		path = os.path.join(out_dir, name)
@@ -914,19 +1371,16 @@ def write_contact_sheets(out_dir, generated, ref):
 
 
 def main():
-	parser = argparse.ArgumentParser(description=__doc__)
-	parser.add_argument("--contact-sheet", metavar="DIR", help="also write before/after previews into DIR")
-	parser.add_argument("--before", metavar="REF", default="HEAD", help="git revision of the 'before' icons")
+	parser = argparse.ArgumentParser(description="generates the icon sets of Veyon")
+	parser.add_argument("--contact-sheet", metavar="DIR", help="also write previews of all icon sets into DIR")
+	parser.add_argument("--restore-classic", action="store_true",
+						help=f"(re)write the original icons of the classic set from git revision {CLASSIC_REF[:9]}")
 	args = parser.parse_args()
 
-	generated = {}
-	for path, colors, painter in ADDON_ICONS:
-		generated[path] = save(make(colors, painter), os.path.join(ROOT, path))
-	for path, colors, painter, _ in FEATURE_ICONS:
-		generated[path] = save(make_glyph(colors, painter), os.path.join(ROOT, path))
+	images = generate(args.restore_classic)
 
 	if args.contact_sheet:
-		write_contact_sheets(args.contact_sheet, generated, args.before)
+		write_contact_sheets(args.contact_sheet, images)
 
 
 if __name__ == "__main__":

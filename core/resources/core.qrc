@@ -2,15 +2,10 @@
   <qresource prefix="/core">
     <file>../../COPYING</file>
     <file>icon64.png</file>
-    <file>addon-store.png</file>
-    <file>addon-generic.png</file>
-    <file>addon-script.png</file>
-    <file>application-x-pem-key.png</file>
     <file>license.png</file>
     <file>user-group-new.png</file>
     <file>user-group-new-dark.png</file>
     <file>languages.png</file>
-    <file>presentation-none.png</file>
     <file>icon16.png</file>
     <file>icon22.png</file>
     <file>icon32.png</file>
@@ -49,5 +44,41 @@
     <file>toast-warning.png</file>
     <file>view-fullscreen.png</file>
     <file>view-fullscreen-dark.png</file>
+  </qresource>
+  <qresource prefix="/icons/veyon-modern">
+    <file alias="index.theme">icons/modern/index.theme</file>
+    <file alias="scalable/veyon-addon-store.png">icons/modern/veyon-addon-store.png</file>
+    <file alias="scalable/veyon-addon-generic.png">icons/modern/veyon-addon-generic.png</file>
+    <file alias="scalable/veyon-addon-script.png">icons/modern/veyon-addon-script.png</file>
+    <file alias="scalable/veyon-monitoring.png">icons/modern/veyon-monitoring.png</file>
+    <file alias="scalable/veyon-screenshot.png">icons/modern/veyon-screenshot.png</file>
+    <file alias="scalable/veyon-authentication-keys.png">icons/modern/veyon-authentication-keys.png</file>
+  </qresource>
+  <qresource prefix="/icons/veyon-monochrome">
+    <file alias="index.theme">icons/monochrome/index.theme</file>
+    <file alias="scalable/veyon-addon-store.png">icons/monochrome/veyon-addon-store.png</file>
+    <file alias="scalable/veyon-addon-generic.png">icons/monochrome/veyon-addon-generic.png</file>
+    <file alias="scalable/veyon-addon-script.png">icons/monochrome/veyon-addon-script.png</file>
+    <file alias="scalable/veyon-monitoring.png">icons/monochrome/veyon-monitoring.png</file>
+    <file alias="scalable/veyon-screenshot.png">icons/monochrome/veyon-screenshot.png</file>
+    <file alias="scalable/veyon-authentication-keys.png">icons/monochrome/veyon-authentication-keys.png</file>
+  </qresource>
+  <qresource prefix="/icons/veyon-monochrome-dark">
+    <file alias="index.theme">icons/monochrome-dark/index.theme</file>
+    <file alias="scalable/veyon-addon-store.png">icons/monochrome-dark/veyon-addon-store.png</file>
+    <file alias="scalable/veyon-addon-generic.png">icons/monochrome-dark/veyon-addon-generic.png</file>
+    <file alias="scalable/veyon-addon-script.png">icons/monochrome-dark/veyon-addon-script.png</file>
+    <file alias="scalable/veyon-monitoring.png">icons/monochrome-dark/veyon-monitoring.png</file>
+    <file alias="scalable/veyon-screenshot.png">icons/monochrome-dark/veyon-screenshot.png</file>
+    <file alias="scalable/veyon-authentication-keys.png">icons/monochrome-dark/veyon-authentication-keys.png</file>
+  </qresource>
+  <qresource prefix="/icons/veyon-classic">
+    <file alias="index.theme">icons/classic/index.theme</file>
+    <file alias="scalable/veyon-addon-store.png">icons/classic/veyon-addon-store.png</file>
+    <file alias="scalable/veyon-addon-generic.png">icons/classic/veyon-addon-generic.png</file>
+    <file alias="scalable/veyon-addon-script.png">icons/classic/veyon-addon-script.png</file>
+    <file alias="scalable/veyon-monitoring.png">icons/classic/veyon-monitoring.png</file>
+    <file alias="scalable/veyon-screenshot.png">icons/classic/veyon-screenshot.png</file>
+    <file alias="scalable/veyon-authentication-keys.png">icons/classic/veyon-authentication-keys.png</file>
   </qresource>
 </RCC>

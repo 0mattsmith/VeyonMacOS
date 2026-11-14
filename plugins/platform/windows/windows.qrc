@@ -1,5 +1,14 @@
 <RCC>
-    <qresource prefix="/windows" >
-        <file>windows-logo.png</file>
+    <qresource prefix="/icons/veyon-modern">
+        <file alias="scalable/veyon-windows.png">icons/modern/veyon-windows.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-monochrome">
+        <file alias="scalable/veyon-windows.png">icons/monochrome/veyon-windows.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-monochrome-dark">
+        <file alias="scalable/veyon-windows.png">icons/monochrome-dark/veyon-windows.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-classic">
+        <file alias="scalable/veyon-windows.png">icons/classic/veyon-windows.png</file>
     </qresource>
 </RCC>

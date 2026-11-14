@@ -1,7 +1,22 @@
 <RCC>
-    <qresource prefix="/desktopservices" >
-        <file>internet-web-browser.png</file>
-        <file>preferences-desktop-launch-feedback.png</file>
-        <file>desktop-services.png</file>
+    <qresource prefix="/icons/veyon-modern">
+        <file alias="scalable/veyon-start-app.png">icons/modern/veyon-start-app.png</file>
+        <file alias="scalable/veyon-open-website.png">icons/modern/veyon-open-website.png</file>
+        <file alias="scalable/veyon-desktop-services.png">icons/modern/veyon-desktop-services.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-monochrome">
+        <file alias="scalable/veyon-start-app.png">icons/monochrome/veyon-start-app.png</file>
+        <file alias="scalable/veyon-open-website.png">icons/monochrome/veyon-open-website.png</file>
+        <file alias="scalable/veyon-desktop-services.png">icons/monochrome/veyon-desktop-services.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-monochrome-dark">
+        <file alias="scalable/veyon-start-app.png">icons/monochrome-dark/veyon-start-app.png</file>
+        <file alias="scalable/veyon-open-website.png">icons/monochrome-dark/veyon-open-website.png</file>
+        <file alias="scalable/veyon-desktop-services.png">icons/monochrome-dark/veyon-desktop-services.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-classic">
+        <file alias="scalable/veyon-start-app.png">icons/classic/veyon-start-app.png</file>
+        <file alias="scalable/veyon-open-website.png">icons/classic/veyon-open-website.png</file>
+        <file alias="scalable/veyon-desktop-services.png">icons/classic/veyon-desktop-services.png</file>
     </qresource>
 </RCC>
