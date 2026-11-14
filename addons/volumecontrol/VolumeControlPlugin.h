@@ -113,7 +113,7 @@ public:
 
 	QString addOnIconUrl() const override
 	{
-		return QStringLiteral(":/volumecontrol/volume.png");
+		return QStringLiteral("veyon-volume");
 	}
 
 	QString addOnSummary() const override

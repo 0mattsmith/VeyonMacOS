@@ -51,7 +51,7 @@ WebPageSenderPlugin::WebPageSenderPlugin( QObject* parent ) :
 							Feature::Uid(),
 							tr( "Web page" ), {},
 							tr( "Open a web page on the selected student computers" ),
-							QStringLiteral(":/webpagesender/webpage-send.png") ),
+							QStringLiteral("veyon-webpage-send") ),
 	m_features( { m_webPageSenderFeature } )
 {
 }

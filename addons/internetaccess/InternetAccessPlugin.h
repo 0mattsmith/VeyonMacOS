@@ -110,7 +110,7 @@ public:
 
 	QString addOnIconUrl() const override
 	{
-		return QStringLiteral(":/internetaccess/internet-access.png");
+		return QStringLiteral("veyon-internet-access");
 	}
 
 	QString addOnSummary() const override

@@ -35,6 +35,7 @@
 #include <QVBoxLayout>
 
 #include "Configuration/Object.h"
+#include "VeyonCore.h"
 #include "VeyonMasterInterface.h"
 #include "WebPageSenderDialog.h"
 
@@ -54,7 +55,7 @@ WebPageSenderDialog::WebPageSenderDialog( VeyonMasterInterface& master, int comp
 	m_master( master )
 {
 	setWindowTitle( tr( "Send web page" ) );
-	setWindowIcon( QIcon( QStringLiteral(":/webpagesender/webpage-send.png") ) );
+	setWindowIcon( VeyonCore::icon( QStringLiteral("veyon-webpage-send") ) );
 	setMinimumWidth( 560 );
 
 	auto mainLayout = new QVBoxLayout( this );
@@ -111,7 +112,7 @@ WebPageSenderDialog::WebPageSenderDialog( VeyonMasterInterface& master, int comp
 
 	auto buttonBox = new QDialogButtonBox( QDialogButtonBox::Cancel );
 	auto sendButton = buttonBox->addButton( tr( "Send" ), QDialogButtonBox::AcceptRole );
-	sendButton->setIcon( QIcon( QStringLiteral(":/webpagesender/webpage-send.png") ) );
+	sendButton->setIcon( VeyonCore::icon( QStringLiteral("veyon-webpage-send") ) );
 	sendButton->setDefault( true );
 	connect( buttonBox, &QDialogButtonBox::accepted, this, &WebPageSenderDialog::accept );
 	connect( buttonBox, &QDialogButtonBox::rejected, this, &WebPageSenderDialog::reject );

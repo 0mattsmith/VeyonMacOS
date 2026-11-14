@@ -6,8 +6,8 @@
    <string>Web API</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="webapi.qrc">
-    <normaloff>:/webapi/webapi.png</normaloff>:/webapi/webapi.png</iconset>
+   <iconset theme="veyon-web-api">
+    <normaloff>:/icons/veyon-modern/scalable/veyon-web-api.png</normaloff>:/icons/veyon-modern/scalable/veyon-web-api.png</iconset>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="topMargin">

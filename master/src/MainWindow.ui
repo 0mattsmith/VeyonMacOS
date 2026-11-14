@@ -262,8 +262,8 @@ Press and hold to load arrangement from a file or save current arrangement to a 
            <string>Locations &amp;&amp; computers</string>
           </property>
           <property name="icon">
-           <iconset resource="../resources/master.qrc">
-            <normaloff>:/master/computers.png</normaloff>:/master/computers.png</iconset>
+           <iconset theme="veyon-locations-computers">
+            <normaloff>:/icons/veyon-modern/scalable/veyon-locations-computers.png</normaloff>:/icons/veyon-modern/scalable/veyon-locations-computers.png</iconset>
           </property>
           <property name="checkable">
            <bool>true</bool>
@@ -282,8 +282,8 @@ Press and hold to load arrangement from a file or save current arrangement to a 
            <string>Screenshots</string>
           </property>
           <property name="icon">
-           <iconset resource="../resources/master.qrc">
-            <normaloff>:/master/camera-photo.png</normaloff>:/master/camera-photo.png</iconset>
+           <iconset theme="veyon-screenshot">
+            <normaloff>:/icons/veyon-modern/scalable/veyon-screenshot.png</normaloff>:/icons/veyon-modern/scalable/veyon-screenshot.png</iconset>
           </property>
           <property name="checkable">
            <bool>true</bool>
@@ -302,8 +302,8 @@ Press and hold to load arrangement from a file or save current arrangement to a 
            <string>Slideshow</string>
           </property>
           <property name="icon">
-           <iconset resource="../resources/master.qrc">
-            <normaloff>:/master/computer-slideshow.png</normaloff>:/master/computer-slideshow.png</iconset>
+           <iconset theme="veyon-slideshow">
+            <normaloff>:/icons/veyon-modern/scalable/veyon-slideshow.png</normaloff>:/icons/veyon-modern/scalable/veyon-slideshow.png</iconset>
           </property>
           <property name="checkable">
            <bool>true</bool>
@@ -319,8 +319,8 @@ Press and hold to load arrangement from a file or save current arrangement to a 
            <string>Spotlight</string>
           </property>
           <property name="icon">
-           <iconset resource="../resources/master.qrc">
-            <normaloff>:/master/spotlight.png</normaloff>:/master/spotlight.png</iconset>
+           <iconset theme="veyon-spotlight">
+            <normaloff>:/icons/veyon-modern/scalable/veyon-spotlight.png</normaloff>:/icons/veyon-modern/scalable/veyon-spotlight.png</iconset>
           </property>
           <property name="checkable">
            <bool>true</bool>

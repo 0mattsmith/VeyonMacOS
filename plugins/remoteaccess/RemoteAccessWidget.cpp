@@ -49,12 +49,12 @@ RemoteAccessWidgetToolBar::RemoteAccessWidgetToolBar( RemoteAccessWidget* parent
 	QWidget( parent ),
 	m_parent( parent ),
 	m_showHideTimeLine( ShowHideAnimationDuration, this ),
-	m_viewOnlyButton( showViewOnlyToggleButton ? new ToolButton( QPixmap( QStringLiteral(":/remoteaccess/kmag.png") ), tr( "View only" ), tr( "Remote control" ) ) : nullptr ),
-	m_selectScreenButton( new ToolButton( QPixmap( QStringLiteral(":/remoteaccess/preferences-system-windows-effect-desktopgrid.png") ), tr( "Select screen" ) ) ),
-	m_sendShortcutButton( new ToolButton( QPixmap( QStringLiteral(":/remoteaccess/preferences-desktop-keyboard.png") ), tr( "Send shortcut" ) ) ),
-	m_screenshotButton( new ToolButton( QPixmap( QStringLiteral(":/remoteaccess/camera-photo.png") ), tr( "Screenshot" ) ) ),
+	m_viewOnlyButton( showViewOnlyToggleButton ? new ToolButton( VeyonCore::icon( QStringLiteral("veyon-remote-view") ), tr( "View only" ), tr( "Remote control" ) ) : nullptr ),
+	m_selectScreenButton( new ToolButton( VeyonCore::icon( QStringLiteral("veyon-select-screen") ), tr( "Select screen" ) ) ),
+	m_sendShortcutButton( new ToolButton( VeyonCore::icon( QStringLiteral("veyon-send-shortcut") ), tr( "Send shortcut" ) ) ),
+	m_screenshotButton( new ToolButton( VeyonCore::icon( QStringLiteral("veyon-screenshot") ), tr( "Screenshot" ) ) ),
 	m_fullScreenButton( new ToolButton( QPixmap( QStringLiteral(":/core/view-fullscreen.png") ), tr( "Fullscreen" ), tr( "Window" ) ) ),
-	m_exitButton( new ToolButton( QPixmap( QStringLiteral(":/remoteaccess/application-exit.png") ), tr( "Exit" ) ) ),
+	m_exitButton( new ToolButton( VeyonCore::icon( QStringLiteral("veyon-exit") ), tr( "Exit" ) ) ),
 	m_screenSelectActions( new QActionGroup(this) )
 {
 	setAttribute( Qt::WA_NoSystemBackground, true );
@@ -319,7 +319,7 @@ RemoteAccessWidget::RemoteAccessWidget( const ComputerControlInterface::Pointer&
 	updateRemoteAccessTitle();
 	connect( m_computerControlInterface.data(), &ComputerControlInterface::userChanged, this, &RemoteAccessWidget::updateRemoteAccessTitle );
 
-	setWindowIcon( QPixmap( QStringLiteral(":/remoteaccess/kmag.png") ) );
+	setWindowIcon( VeyonCore::icon( QStringLiteral("veyon-remote-view") ) );
 	setAttribute( Qt::WA_DeleteOnClose, true );
 
 	m_vncView->move( 0, 0 );

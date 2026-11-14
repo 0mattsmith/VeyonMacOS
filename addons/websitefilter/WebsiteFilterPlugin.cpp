@@ -45,13 +45,13 @@ WebsiteFilterPlugin::WebsiteFilterPlugin( QObject* parent ) :
 							Feature::Uid(),
 							tr( "Websites" ), {},
 							tr( "Block websites or allow selected websites only" ),
-							QStringLiteral(":/websitefilter/website-filter.png") ),
+							QStringLiteral("veyon-website-filter") ),
 	m_activeIndicatorFeature( QStringLiteral("WebsiteFilterActiveIndicator"),
 							  Feature::Flag::Meta | Feature::Flag::AllComponents,
 							  Feature::Uid( "e5a9c3d1-2f84-4b67-8d1e-a6c0b7f94e28" ),
 							  Feature::Uid(),
 							  tr( "Websites filtered" ), {}, {},
-							  QStringLiteral(":/websitefilter/website-filter.png") ),
+							  QStringLiteral("veyon-website-filter") ),
 	m_features( { m_websiteFilterFeature, m_activeIndicatorFeature } ),
 	m_configuration( &VeyonCore::config() )
 {
@@ -257,7 +257,7 @@ bool WebsiteFilterPlugin::revertSystemChanges( QString* errorString )
 
 ConfigurationPage* WebsiteFilterPlugin::createConfigurationPage()
 {
-	auto page = new SimpleConfigurationPage( tr( "Website Filter" ), QStringLiteral(":/websitefilter/website-filter.png") );
+	auto page = new SimpleConfigurationPage( tr( "Website Filter" ), QStringLiteral("veyon-website-filter") );
 	page->addDescription( tr( "Teachers can block websites or allow selected websites only. The rules are applied as "
 							  "browser policies for Google Chrome, Microsoft Edge, Brave, Chromium and Mozilla Firefox. "
 							  "Policies configured before (e.g. via Group Policy) are restored when the rules are removed." ) );

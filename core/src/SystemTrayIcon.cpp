@@ -216,7 +216,8 @@ void SystemTrayIcon::updateIcon(const QString& overlayIconUrl)
 		QImage overlayIcon;
 		if (overlayIconUrl.isEmpty() == false)
 		{
-			overlayIcon.load(overlayIconUrl);
+			// icon theme name or file of the overlay icon
+			overlayIcon = VeyonCore::icon(overlayIconUrl).pixmap(QSize(128, 128)).toImage();
 		}
 
 #ifdef Q_OS_MACOS

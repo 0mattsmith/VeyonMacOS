@@ -42,7 +42,7 @@ TextMessageFeaturePlugin::TextMessageFeaturePlugin( QObject* parent ) :
 								   tr( "Text message" ), {},
 								   tr( "Use this function to send a text message to all "
 									   "users e.g. to assign them new tasks." ),
-								   QStringLiteral(":/textmessage/dialog-information.png") ) ),
+								   QStringLiteral("veyon-text-message") ) ),
 	m_features( { m_textMessageFeature } )
 {
 }

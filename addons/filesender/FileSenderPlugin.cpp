@@ -48,7 +48,7 @@ FileSenderPlugin::FileSenderPlugin( QObject* parent ) :
 						 Feature::Uid(),
 						 tr( "Send files" ), {},
 						 tr( "Send files and folders to the selected student computers" ),
-						 QStringLiteral(":/filesender/file-send.png") ),
+						 QStringLiteral("veyon-file-send") ),
 	m_features( { m_fileSenderFeature } )
 {
 }

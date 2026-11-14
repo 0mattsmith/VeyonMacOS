@@ -3,8 +3,8 @@
  <class>SlideshowPanel</class>
  <widget class="QWidget" name="SlideshowPanel">
   <property name="windowIcon">
-   <iconset resource="../resources/master.qrc">
-    <normaloff>:/master/computer-slideshow.png</normaloff>:/master/computer-slideshow.png</iconset>
+   <iconset theme="veyon-slideshow">
+    <normaloff>:/icons/veyon-modern/scalable/veyon-slideshow.png</normaloff>:/icons/veyon-modern/scalable/veyon-slideshow.png</iconset>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="spacing">

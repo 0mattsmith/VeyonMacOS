@@ -51,6 +51,7 @@
 
 #include "AddOnUtils.h"
 #include "FileManagerDialog.h"
+#include "VeyonCore.h"
 
 
 namespace {
@@ -157,7 +158,7 @@ FileManagerDialog::FileManagerDialog( FileManagerPlugin& plugin, const ComputerC
 	m_lastDownloadDirectory( QStandardPaths::writableLocation( QStandardPaths::DownloadLocation ) + QStringLiteral("/Veyon") )
 {
 	setWindowTitle( tr( "Remote File Manager" ) );
-	setWindowIcon( QIcon( QStringLiteral(":/filemanager/filemanager.png") ) );
+	setWindowIcon( VeyonCore::icon( QStringLiteral("veyon-file-manager") ) );
 	resize( 1000, 680 );
 
 	auto mainLayout = new QVBoxLayout( this );
