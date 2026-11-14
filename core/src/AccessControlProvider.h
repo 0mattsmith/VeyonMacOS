@@ -157,7 +157,9 @@ private:
 						  const QStringList& connectedUsers ) const;
 
 	static QStringList objectNames( const NetworkObjectList& objects );
-	static bool matchList(const QStringList& list, const QString& pattern);
+	static bool matchList(const QStringList& list, const QString& pattern,
+						  Qt::CaseSensitivity caseSensitivity = Qt::CaseSensitive);
+	static bool haveCommonUserGroup(const QStringList& groups, const QStringList& otherGroups);
 
 	QList<AccessControlRule::Pointer> m_accessControlRules{};
 	UserGroupsBackendInterface* m_userGroupsBackend;

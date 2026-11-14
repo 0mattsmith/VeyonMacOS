@@ -22,6 +22,7 @@
  *
  */
 
+#include <QCoreApplication>
 #include <QFileInfo>
 #include <QProcess>
 #include <QScreen>
@@ -231,15 +232,36 @@ bool MacOsCoreFunctions::isRunningAsAdmin() const
 
 bool MacOsCoreFunctions::runProgramAsAdmin( const QString& program, const QStringList& parameters )
 {
-	QStringList commandLine{ shellQuote( program ) };
+	QStringList commandLine;
+
+	// "do shell script … with administrator privileges" doesn't start the program in the bootstrap context of the
+	// user's GUI (Aqua) session, so per-user services such as the pasteboard aren't available and copying and
+	// pasting text from and to other applications fails. Like the Veyon Server (see MacOsServerProcess), start it
+	// in the user's context - "launchctl asuser" keeps the root privileges.
+	const auto userId = getuid();
+	if( userId != 0 )
+	{
+		commandLine = QStringList{ QStringLiteral("/bin/launchctl"), QStringLiteral("asuser"), QString::number( userId ) };
+	}
+
+	commandLine.append( shellQuote( program ) );
 	for( const auto& parameter : parameters )
 	{
 		commandLine.append( shellQuote( parameter ) );
 	}
 
+	// the authentication dialog names osascript as the requesting application, so explain who is asking and why
+	const auto prompt = VeyonCore::component() == VeyonCore::Component::Configurator ?
+							QCoreApplication::translate( "MacOsCoreFunctions",
+														 "Veyon Configurator needs administrator privileges to change "
+														 "the Veyon configuration and authentication keys of this computer." ) :
+							QCoreApplication::translate( "MacOsCoreFunctions",
+														 "Veyon needs administrator privileges to continue." );
+
 	// run program in background so osascript returns immediately after successful authentication
-	const auto script = QStringLiteral("do shell script \"%1 > /dev/null 2>&1 &\" with administrator privileges").
-						arg( appleScriptEscape( commandLine.join( QLatin1Char(' ') ) ) );
+	const auto script = QStringLiteral("do shell script \"%1 > /dev/null 2>&1 &\" with prompt \"%2\" "
+									   "with administrator privileges").
+						arg( appleScriptEscape( commandLine.join( QLatin1Char(' ') ) ), appleScriptEscape( prompt ) );
 
 	return QProcess::execute( QStringLiteral("/usr/bin/osascript"), { QStringLiteral("-e"), script } ) == 0;
 }

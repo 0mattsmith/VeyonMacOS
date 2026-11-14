@@ -26,6 +26,8 @@
 
 #include "FeatureProviderInterface.h"
 
+class QIcon;
+class QMenu;
 class QSystemTrayIcon;
 class FeatureWorkerManager;
 
@@ -44,7 +46,7 @@ public:
 	Q_ENUM(Argument)
 
 	explicit SystemTrayIcon( QObject* parent = nullptr );
-	~SystemTrayIcon() override = default;
+	~SystemTrayIcon() override;
 
 	void setToolTip( const QString& toolTipText,
 					 FeatureWorkerManager& featureWorkerManager );
@@ -117,6 +119,13 @@ public:
 private:
 	void updateIcon(const QString& overlayIconUrl = {});
 
+#ifdef Q_OS_MACOS
+	void updateMenu( const QString& statusText );
+	static QIcon menuBarIcon();
+	static QString veyonBundlePath();
+	static void openApplication( const QString& bundlePath, const QString& programName );
+#endif
+
 	static constexpr int MessageBoxAutoCloseInterval = 10000;
 
 	enum class FeatureCommand
@@ -131,5 +140,8 @@ private:
 
 	QSystemTrayIcon* m_systemTrayIcon = nullptr;
 	bool m_hidden = false;
+#ifdef Q_OS_MACOS
+	QMenu* m_menu = nullptr;
+#endif
 
 };
