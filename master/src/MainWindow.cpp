@@ -22,13 +22,17 @@
  *
  */
 
+#include <algorithm>
+
 #include <QCloseEvent>
+#include <QFile>
 #include <QFileDialog>
 #include <QJsonDocument>
 #include <QKeyEvent>
 #include <QHostAddress>
 #include <QMenu>
 #include <QMessageBox>
+#include <QPointer>
 #include <QSplitter>
 
 #include <QDir>
@@ -54,6 +58,7 @@
 #include "PlatformUserFunctions.h"
 #include "SlideshowPanel.h"
 #include "SpotlightPanel.h"
+#include "StackedToolButtons.h"
 #include "ToolButton.h"
 #include "VeyonConfiguration.h"
 #include "VeyonMaster.h"
@@ -278,20 +283,12 @@ MainWindow::MainWindow( VeyonMaster &masterCore, QWidget* parent ) :
 
 	addToolBar( Qt::TopToolBarArea, ui->toolBar );
 
-	addFeaturesToToolBar();
-	reloadSubFeatures();
-
-	addAddOnStoreButton();
+	m_featureGroupingEnabled = m_master.userConfig().groupToolBarFeatures();
+	populateToolBar();
 
 #ifdef Q_OS_MACOS
 	setupMacOSMenuBar();
 #endif
-
-	const auto monitoringModeButton = m_modeGroup->button(int(qHash(VeyonCore::builtinFeatures().monitoringMode().feature().uid()))); // clazy:exclude=qt6-qhash-signature
-	if (monitoringModeButton)
-	{
-		monitoringModeButton->setChecked(true);
-	}
 }
 
 
@@ -358,13 +355,9 @@ bool MainWindow::initAccessControl()
 
 void MainWindow::reloadSubFeatures()
 {
-	for( const auto& feature : m_master.features() )
+	for( const auto& updateMenu : std::as_const( m_subFeatureMenuUpdaters ) )
 	{
-		auto button = ui->toolBar->findChild<QToolButton *>( feature.name() );
-		if( button )
-		{
-			addSubFeaturesToToolButton( button, feature );
-		}
+		updateMenu();
 	}
 }
 
@@ -505,14 +498,14 @@ void MainWindow::addAddOnStoreButton()
 	// push the button to the right end of the toolbar
 	auto spacer = new QWidget( ui->toolBar );
 	spacer->setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Preferred );
-	ui->toolBar->addWidget( spacer );
+	m_toolBarActions.append( ui->toolBar->addWidget( spacer ) );
 
 	auto addOnStoreButton = new ToolButton( QIcon( QStringLiteral(":/core/addon-store.png") ),
 											tr( "Add-Ons" ), {},
 											tr( "Open the Add-On Store to enable, disable, install or create add-ons." ) );
 	addOnStoreButton->setObjectName( QStringLiteral("AddOnStoreButton") );
 	connect( addOnStoreButton, &QToolButton::clicked, this, &MainWindow::showAddOnStore );
-	addOnStoreButton->addTo( ui->toolBar );
+	m_toolBarActions.append( addOnStoreButton->addTo( ui->toolBar ) );
 }
 
 
@@ -554,8 +547,160 @@ void MainWindow::setupMacOSMenuBar()
 
 
 
+void MainWindow::setFeatureGroupingEnabled( bool enabled )
+{
+	if( enabled != m_featureGroupingEnabled )
+	{
+		m_featureGroupingEnabled = enabled;
+		populateToolBar();
+	}
+}
+
+
+
+QList<MainWindow::ToolBarGroup> MainWindow::toolBarGroups() const
+{
+	const auto single = []( const QString& featureName ) {
+		return ToolBarGroup{ .name = featureName, .stackedMembers = { { .featureName = featureName } } };
+	};
+
+	// toolbar layout if related features are grouped - modes always come first and stay separate,
+	// features not listed here (e.g. from other plugins) are appended in their usual order
+	return {
+		{
+			.name = QStringLiteral("RemoteAccessGroup"),
+			.label = tr( "Remote" ),
+			.stackedMembers = {
+				{ .featureName = QStringLiteral("RemoteView"), .label = tr( "View" ) },
+				{ .featureName = QStringLiteral("RemoteControl"), .label = tr( "Control" ) }
+			}
+		},
+		{
+			// menu only, so that no single click can power down computers or log off users
+			.name = QStringLiteral("PowerGroup"),
+			.label = tr( "Power" ),
+			.description = tr( "Power on, reboot or power down computers, log off or log in users" ),
+			.menuMembers = {
+				{ .featureName = QStringLiteral("PowerOn") },
+				{ .featureName = QStringLiteral("Reboot") },
+				{ .featureName = QStringLiteral("PowerDown") },
+				{ .featureName = QStringLiteral("UserLogoff"), .separatorBefore = true },
+				{ .featureName = QStringLiteral("UserLogin"), .label = tr( "Log in…" ) }
+			},
+			.iconFeature = QStringLiteral("PowerDown")
+		},
+		single( QStringLiteral("TextMessage") ),
+		single( QStringLiteral("StartApp") ),
+		{
+			// the DesktopServices plugin looks up the button with the saved websites by this name
+			.name = QStringLiteral("OpenWebsite"),
+			.stackedMembers = {
+				{ .featureName = QStringLiteral("WebPageSender"), .label = tr( "Website" ) }
+			},
+			.menuMembers = {
+				{ .featureName = QStringLiteral("OpenWebsite"), .label = tr( "Open website…" ), .inlineSubFeatures = true }
+			}
+		},
+		single( QStringLiteral("Screenshot") ),
+		{
+			.name = QStringLiteral("FileTransferGroup"),
+			.label = tr( "Files" ),
+			.description = tr( "More file functions" ),
+			.stackedMembers = {
+				{ .featureName = QStringLiteral("DistributeFiles") },
+				{ .featureName = QStringLiteral("FileCollect") }
+			},
+			.menuMembers = {
+				{ .featureName = QStringLiteral("FileSender"), .label = tr( "Send files…" ) },
+				{ .featureName = QStringLiteral("FileManager"), .label = tr( "File manager…" ) }
+			}
+		},
+		single( QStringLiteral("TaskManager") ),
+		single( QStringLiteral("VolumeControl") ),
+		single( QStringLiteral("InternetAccess") ),
+		single( QStringLiteral("WebsiteFilter") ),
+		{
+			.name = QStringLiteral("ScriptAddOnsGroup"),
+			.label = tr( "Scripts" ),
+			.description = tr( "Run a script add-on on the computers" ),
+			.menuMemberPrefixes = { QStringLiteral("ScriptAddOn-"), QStringLiteral("ScriptAction-") },
+			.iconUrl = QStringLiteral(":/scriptedaddons/scripted-addons.png")
+		}
+	};
+}
+
+
+
+void MainWindow::populateToolBar()
+{
+	clearToolBar();
+
+	if( m_featureGroupingEnabled )
+	{
+		addGroupedFeaturesToToolBar();
+	}
+	else
+	{
+		addFeaturesToToolBar();
+	}
+
+	// check the button of the active mode before creating the menus (an active mode has none)
+	updateModeButtons();
+	reloadSubFeatures();
+
+	addAddOnStoreButton();
+}
+
+
+
+void MainWindow::clearToolBar()
+{
+	m_subFeatureMenuUpdaters.clear();
+
+	// the buttons are deleted later, so remove them from the mode group right away
+	const auto modeButtons = m_modeGroup->buttons();
+	for( auto* button : modeButtons )
+	{
+		m_modeGroup->removeButton( button );
+	}
+
+	// actions with shortcuts from group menus have been added to this window as well
+	const auto windowActions = actions();
+	for( auto* action : windowActions )
+	{
+		if( action->property( toolBarShortcutPropertyName() ).toBool() )
+		{
+			removeAction( action );
+		}
+	}
+
+	for( auto* action : std::as_const( m_toolBarActions ) )
+	{
+		ui->toolBar->removeAction( action );
+		action->deleteLater();
+	}
+	m_toolBarActions.clear();
+}
+
+
+
 void MainWindow::addFeaturesToToolBar()
 {
+	for( const auto& feature : m_master.features() )
+	{
+		if( feature.testFlag( Feature::Flag::Meta ) == false )
+		{
+			addFeatureButton( feature );
+		}
+	}
+}
+
+
+
+void MainWindow::addGroupedFeaturesToToolBar()
+{
+	FeatureList ungroupedFeatures;
+
 	for( const auto& feature : m_master.features() )
 	{
 		if( feature.testFlag( Feature::Flag::Meta ) )
@@ -563,28 +708,320 @@ void MainWindow::addFeaturesToToolBar()
 			continue;
 		}
 
-		auto btn = new ToolButton( QIcon( feature.iconUrl() ),
-										  feature.displayName(),
-										  feature.displayNameActive(),
-										  feature.description(),
-										  feature.shortcut() );
-		connect(btn, &QToolButton::clicked, this, [=, this] () {
-			m_master.runFeature( feature );
-			updateModeButtonGroup();
-			if( feature.testFlag( Feature::Flag::Mode ) )
-			{
-				reloadSubFeatures();
-			}
-		});
-		btn->setObjectName( feature.name() );
-		btn->addTo( ui->toolBar );
-
+		// modes stay separate so that an active mode can be seen at a glance
 		if( feature.testFlag( Feature::Flag::Mode ) )
 		{
-			btn->setCheckable( true );
-			m_modeGroup->addButton( btn, buttonId( feature ) );
+			addFeatureButton( feature );
+		}
+		else
+		{
+			ungroupedFeatures.append( feature );
 		}
 	}
+
+	const auto takeFeatures = [&ungroupedFeatures]( const std::function<bool(const Feature&)>& filter ) {
+		FeatureList features;
+		for( auto it = ungroupedFeatures.begin(); it != ungroupedFeatures.end(); )
+		{
+			if( filter( *it ) )
+			{
+				features.append( *it );
+				it = ungroupedFeatures.erase( it );
+			}
+			else
+			{
+				++it;
+			}
+		}
+		return features;
+	};
+
+	// members whose features are not available (add-on not installed, feature disabled) are left out
+	const auto availableMembers = [&takeFeatures]( const QList<ToolBarGroupMember>& members ) {
+		QList<ToolBarGroupMember> available;
+		for( const auto& member : members )
+		{
+			const auto features = takeFeatures( [&member]( const Feature& feature ) {
+				return feature.name() == member.featureName;
+			} );
+			if( features.isEmpty() == false )
+			{
+				auto availableMember = member;
+				availableMember.feature = features.constFirst();
+				if( availableMember.label.isEmpty() )
+				{
+					availableMember.label = availableMember.feature.displayName();
+				}
+				available.append( availableMember );
+			}
+		}
+		return available;
+	};
+
+	const auto groups = toolBarGroups();
+	for( const auto& group : groups )
+	{
+		const auto stackedMembers = availableMembers( group.stackedMembers );
+		auto menuMembers = availableMembers( group.menuMembers );
+
+		const auto prefixedFeatures = takeFeatures( [&group]( const Feature& feature ) {
+			return std::any_of( group.menuMemberPrefixes.cbegin(), group.menuMemberPrefixes.cend(),
+								[&feature]( const QString& prefix ) { return feature.name().startsWith( prefix ); } );
+		} );
+		for( const auto& feature : prefixedFeatures )
+		{
+			const ToolBarGroupMember member{ .featureName = feature.name(), .label = feature.displayName(), .feature = feature };
+			menuMembers.append( member );
+		}
+
+		addFeatureGroup( group, stackedMembers, menuMembers );
+	}
+
+	for( const auto& feature : std::as_const( ungroupedFeatures ) )
+	{
+		addFeatureButton( feature );
+	}
+}
+
+
+
+void MainWindow::addFeatureGroup( const ToolBarGroup& group,
+								  const QList<ToolBarGroupMember>& stackedMembers,
+								  const QList<ToolBarGroupMember>& menuMembers )
+{
+	const auto memberCount = stackedMembers.size() + menuMembers.size();
+	if( memberCount == 0 )
+	{
+		return;
+	}
+
+	if( memberCount == 1 )
+	{
+		// nothing left to group with
+		addFeatureButton( stackedMembers.isEmpty() ? menuMembers.constFirst().feature : stackedMembers.constFirst().feature );
+		return;
+	}
+
+	if( stackedMembers.size() >= 2 )
+	{
+		auto stack = new StackedToolButtons( group.description );
+		stack->setObjectName( group.name );
+
+		for( const auto& member : stackedMembers )
+		{
+			auto button = createFeatureButton( member.feature, member.label );
+			button->setToolTipLabel( member.feature.displayName() );
+			stack->addButton( button );
+
+			m_subFeatureMenuUpdaters.append( [this, button = QPointer<QToolButton>( button ), feature = member.feature]() {
+				if( button )
+				{
+					addSubFeaturesToToolButton( button, feature );
+				}
+			} );
+		}
+
+		auto action = ui->toolBar->addWidget( stack );
+		action->setText( group.label );
+		m_toolBarActions.append( action );
+
+		if( menuMembers.isEmpty() == false )
+		{
+			m_subFeatureMenuUpdaters.append( [this, stack = QPointer<StackedToolButtons>( stack ), group, menuMembers]() {
+				if( stack )
+				{
+					discardMenu( stack->menu() );
+					stack->setMenu( createGroupMenu( group, menuMembers, stack ) );
+				}
+			} );
+		}
+
+		return;
+	}
+
+	ToolButton* button = nullptr;
+
+	if( stackedMembers.isEmpty() == false )
+	{
+		// the main part runs the primary feature, the arrow opens the menu
+		const auto& primaryMember = stackedMembers.constFirst();
+		button = createFeatureButton( primaryMember.feature, primaryMember.label );
+		button->setPopupMode( QToolButton::MenuButtonPopup );
+	}
+	else
+	{
+		auto iconUrl = group.iconUrl;
+		if( iconUrl.isEmpty() || QFile::exists( iconUrl ) == false )
+		{
+			// reuse the icon of a member
+			iconUrl = menuMembers.constFirst().feature.iconUrl();
+			for( const auto& member : menuMembers )
+			{
+				if( member.featureName == group.iconFeature )
+				{
+					iconUrl = member.feature.iconUrl();
+				}
+			}
+		}
+
+		button = new ToolButton( QIcon( iconUrl ), group.label, {}, group.description );
+		button->setPopupMode( QToolButton::InstantPopup );
+	}
+
+	button->setObjectName( group.name );
+	m_toolBarActions.append( button->addTo( ui->toolBar ) );
+
+	m_subFeatureMenuUpdaters.append( [this, button = QPointer<QToolButton>( button ), group, menuMembers]() {
+		if( button )
+		{
+			discardMenu( button->menu() );
+			button->setMenu( createGroupMenu( group, menuMembers, button ) );
+		}
+	} );
+}
+
+
+
+ToolButton* MainWindow::createFeatureButton( const Feature& feature, const QString& label )
+{
+	auto button = new ToolButton( QIcon( feature.iconUrl() ),
+								  label,
+								  feature.displayNameActive(),
+								  feature.description(),
+								  feature.shortcut() );
+	button->setObjectName( feature.name() );
+
+	connect( button, &QToolButton::clicked, this, [=, this]() { runFeatureFromToolBar( feature ); } );
+
+	if( feature.testFlag( Feature::Flag::Mode ) )
+	{
+		button->setCheckable( true );
+		m_modeGroup->addButton( button, buttonId( feature ) );
+	}
+
+	return button;
+}
+
+
+
+void MainWindow::addFeatureButton( const Feature& feature )
+{
+	auto button = createFeatureButton( feature, feature.displayName() );
+	m_toolBarActions.append( button->addTo( ui->toolBar ) );
+
+	m_subFeatureMenuUpdaters.append( [this, button = QPointer<QToolButton>( button ), feature]() {
+		if( button )
+		{
+			addSubFeaturesToToolButton( button, feature );
+		}
+	} );
+}
+
+
+
+QMenu* MainWindow::createGroupMenu( const ToolBarGroup& group, const QList<ToolBarGroupMember>& members, QWidget* parent )
+{
+	auto menu = new QMenu( parent );
+	menu->setObjectName( group.name );
+	menu->setToolTipsVisible( true );
+
+	for( const auto& member : members )
+	{
+		const auto& feature = member.feature;
+		const auto subFeatures = m_master.subFeatures( feature.uid() );
+
+		if( member.separatorBefore && menu->isEmpty() == false )
+		{
+			menu->addSeparator();
+		}
+
+		if( member.inlineSubFeatures )
+		{
+			// e.g. saved websites, followed by the feature itself (which may be listed as sub-feature as well)
+			bool hasSubFeatureActions = false;
+			for( const auto& subFeature : subFeatures )
+			{
+				if( subFeature.uid() != feature.uid() )
+				{
+					addSubFeatureAction( menu, subFeature, feature, nullptr );
+					hasSubFeatureActions = true;
+				}
+			}
+			if( hasSubFeatureActions )
+			{
+				menu->addSeparator();
+			}
+			addFeatureAction( menu, feature, member.label );
+		}
+		else if( subFeatures.isEmpty() )
+		{
+			addFeatureAction( menu, feature, member.label );
+		}
+		else
+		{
+			auto subMenu = menu->addMenu( QIcon( feature.iconUrl() ), member.label );
+			subMenu->setObjectName( feature.name() );
+			subMenu->setToolTipsVisible( true );
+			subMenu->menuAction()->setToolTip( feature.description() );
+
+			for( const auto& subFeature : subFeatures )
+			{
+				addSubFeatureAction( subMenu, subFeature, feature, nullptr );
+			}
+		}
+	}
+
+	return menu;
+}
+
+
+
+void MainWindow::addFeatureAction( QMenu* menu, const Feature& feature, const QString& label )
+{
+	auto action = menu->addAction( QIcon( feature.iconUrl() ), label );
+	action->setToolTip( feature.description() );
+	action->setObjectName( feature.uid().toString() );
+
+	connect( action, &QAction::triggered, this, [=, this]() { runFeatureFromToolBar( feature ); } );
+
+	if( feature.shortcut().isEmpty() == false )
+	{
+		// also add the action to this window so that its shortcut works while the menu is closed
+		action->setShortcut( feature.shortcut() );
+		action->setProperty( toolBarShortcutPropertyName(), true );
+		addAction( action );
+	}
+}
+
+
+
+void MainWindow::addSubFeatureAction( QMenu* menu, const Feature& subFeature, const Feature& parentFeature,
+									  QToolButton* parentButton )
+{
+	const auto parentFeatureIsMode = parentFeature.testFlag( Feature::Flag::Mode );
+
+	auto action = menu->addAction( QIcon( subFeature.iconUrl() ), subFeature.displayName() );
+	action->setShortcut( subFeature.shortcut() );
+	action->setToolTip( subFeature.description() );
+	action->setObjectName( subFeature.uid().toString() );
+
+	if( subFeature.testFlag( Feature::Flag::Option ) )
+	{
+		action->setCheckable( true );
+		action->setChecked( subFeature.testFlag( Feature::Flag::Checked ) );
+	}
+
+	connect( action, &QAction::triggered, this, [=, this]() {
+		m_master.runFeature( subFeature );
+		if( parentFeatureIsMode )
+		{
+			if( parentButton && subFeature.testFlag( Feature::Flag::Option ) == false )
+			{
+				parentButton->setChecked( true );
+			}
+			reloadSubFeatures();
+		}
+	} );
 }
 
 
@@ -593,8 +1030,7 @@ void MainWindow::addSubFeaturesToToolButton( QToolButton* button, const Feature&
 {
 	if( button->menu() )
 	{
-		button->menu()->close();
-		button->menu()->deleteLater();
+		discardMenu( button->menu() );
 		button->setMenu( nullptr );
 	}
 
@@ -613,38 +1049,61 @@ void MainWindow::addSubFeaturesToToolButton( QToolButton* button, const Feature&
 
 	for( const auto& subFeature : subFeatures )
 	{
-		auto action = menu->addAction(QIcon(subFeature.iconUrl()), subFeature.displayName(),
-							   #if QT_VERSION >= QT_VERSION_CHECK(6, 3, 0)
-									  subFeature.shortcut(),
-							   #endif
-									  this, [=, this]()
-		{
-			m_master.runFeature( subFeature );
-			if( parentFeatureIsMode )
-			{
-				if( subFeature.testFlag( Feature::Flag::Option ) == false )
-				{
-					button->setChecked( true );
-				}
-				reloadSubFeatures();
-			}
-		}
-#if QT_VERSION < QT_VERSION_CHECK(6, 3, 0)
-		,subFeature.shortcut()
-#endif
-		);
-		action->setToolTip( subFeature.description() );
-		action->setObjectName( subFeature.uid().toString() );
-
-		if( subFeature.testFlag( Feature::Flag::Option ) )
-		{
-			action->setCheckable( true );
-			action->setChecked( subFeature.testFlag( Feature::Flag::Checked ) );
-		}
+		addSubFeatureAction( menu, subFeature, parentFeature, button );
 	}
 
 	button->setMenu( menu );
 	button->setPopupMode( ToolButton::InstantPopup );
+}
+
+
+
+void MainWindow::discardMenu( QMenu* menu )
+{
+	if( menu )
+	{
+		const auto menuActions = menu->actions();
+		for( auto* action : menuActions )
+		{
+			removeAction( action );
+		}
+
+		menu->close();
+		menu->deleteLater();
+	}
+}
+
+
+
+void MainWindow::runFeatureFromToolBar( const Feature& feature )
+{
+	m_master.runFeature( feature );
+	updateModeButtonGroup();
+	if( feature.testFlag( Feature::Flag::Mode ) )
+	{
+		reloadSubFeatures();
+	}
+}
+
+
+
+void MainWindow::updateModeButtons()
+{
+	const auto& currentModeFeature = VeyonCore::featureManager().feature( m_master.currentMode() );
+
+	for( const auto& feature : m_master.features() )
+	{
+		if( feature.testFlag( Feature::Flag::Mode ) &&
+			( feature == currentModeFeature ||
+			  m_master.subFeatures( feature.uid() ).contains( currentModeFeature ) ) )
+		{
+			const auto button = m_modeGroup->button( buttonId( feature ) );
+			if( button )
+			{
+				button->setChecked( true );
+			}
+		}
+	}
 }
 
 

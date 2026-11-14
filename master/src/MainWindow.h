@@ -24,12 +24,16 @@
 
 #pragma once
 
+#include <functional>
+
 #include <QMainWindow>
 
 #include "ComputerControlInterface.h"
 
 class QButtonGroup;
+class QMenu;
 class QToolButton;
+class ToolButton;
 
 class VeyonMaster;
 
@@ -54,6 +58,9 @@ public:
 	}
 
 	void reloadSubFeatures();
+
+	// show related features as one toolbar slot (stacked buttons or a menu) instead of one button per feature
+	void setFeatureGroupingEnabled( bool enabled );
 
 	ComputerControlInterfaceList selectedComputerControlInterfaces() const;
 
@@ -84,9 +91,51 @@ private:
 		return "originalSize";
 	}
 
-	void addFeaturesToToolBar();
-	void addSubFeaturesToToolButton( QToolButton* button, const Feature& parentFeature );
+	static constexpr const char* toolBarShortcutPropertyName()
+	{
+		return "toolBarShortcut";
+	}
 
+	struct ToolBarGroupMember
+	{
+		QString featureName;
+		QString label{};				// label in the toolbar or menu (default: display name of the feature)
+		bool inlineSubFeatures{false};	// list sub-features directly in the group menu instead of a submenu
+		bool separatorBefore{false};
+		Feature feature{};				// filled in if the feature is available
+	};
+
+	struct ToolBarGroup
+	{
+		QString name;					// object name of the group's widget (and its menu)
+		QString label{};				// label of a menu-only group button
+		QString description{};			// tooltip of a menu-only group button or the drop-down arrow
+		QList<ToolBarGroupMember> stackedMembers{};	// up to two features shown as stacked half-height buttons
+		QList<ToolBarGroupMember> menuMembers{};	// features listed in the group's drop-down menu
+		QStringList menuMemberPrefixes{};			// add all features whose names start with one of these
+		QString iconFeature{};			// feature whose icon a menu-only group button shows
+		QString iconUrl{};				// icon of a menu-only group button (takes precedence if it exists)
+	};
+
+	QList<ToolBarGroup> toolBarGroups() const;
+
+	void populateToolBar();
+	void clearToolBar();
+	void addFeaturesToToolBar();
+	void addGroupedFeaturesToToolBar();
+	void addFeatureGroup( const ToolBarGroup& group,
+						  const QList<ToolBarGroupMember>& stackedMembers,
+						  const QList<ToolBarGroupMember>& menuMembers );
+	ToolButton* createFeatureButton( const Feature& feature, const QString& label );
+	void addFeatureButton( const Feature& feature );
+	QMenu* createGroupMenu( const ToolBarGroup& group, const QList<ToolBarGroupMember>& members, QWidget* parent );
+	void addFeatureAction( QMenu* menu, const Feature& feature, const QString& label );
+	void addSubFeatureAction( QMenu* menu, const Feature& subFeature, const Feature& parentFeature, QToolButton* parentButton );
+	void addSubFeaturesToToolButton( QToolButton* button, const Feature& parentFeature );
+	void discardMenu( QMenu* menu );
+
+	void runFeatureFromToolBar( const Feature& feature );
+	void updateModeButtons();
 	void updateModeButtonGroup();
 
 	void loadComputerPositions();
@@ -97,5 +146,9 @@ private:
 	VeyonMaster& m_master;
 
 	QButtonGroup* m_modeGroup;
+
+	bool m_featureGroupingEnabled{true};
+	QList<QAction *> m_toolBarActions;
+	QList<std::function<void()>> m_subFeatureMenuUpdaters;
 
 } ;

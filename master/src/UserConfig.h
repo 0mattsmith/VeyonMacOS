@@ -54,6 +54,7 @@ public:
 	OP( UserConfig, VeyonMaster::userConfig(), bool, spotlightRealtime, setSpotlightRealtime, "SpotlightRealtime", "UI", true, Configuration::Property::Flag::Standard )	\
 	OP( UserConfig, VeyonMaster::userConfig(), int, defaultRole, setDefaultRole, "DefaultRole", "Authentication", 0, Configuration::Property::Flag::Standard )	\
 	OP( UserConfig, VeyonMaster::userConfig(), bool, toolButtonIconOnlyMode, setToolButtonIconOnlyMode, "ToolButtonIconOnlyMode", "UI", false, Configuration::Property::Flag::Standard )	\
+	OP( UserConfig, VeyonMaster::userConfig(), bool, groupToolBarFeatures, setGroupToolBarFeatures, "GroupToolBarFeatures", "UI", true, Configuration::Property::Flag::Standard )	\
 	OP( UserConfig, VeyonMaster::userConfig(), bool, noToolTips, setNoToolTips, "NoToolTips", "UI", false, Configuration::Property::Flag::Standard )	\
 	OP( UserConfig, VeyonMaster::userConfig(), QJsonObject, splitterStates, setSplitterStates, "SplitterStates", "UI", {}, Configuration::Property::Flag::Standard )	\
 	OP( UserConfig, VeyonMaster::userConfig(), QString, windowState, setWindowState, "WindowState", "UI", QString(), Configuration::Property::Flag::Standard )	\
