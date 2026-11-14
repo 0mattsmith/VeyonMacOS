@@ -51,6 +51,7 @@
 #include "Configuration/Object.h"
 #include "TaskManagerDialog.h"
 #include "TaskManagerPlugin.h"
+#include "VeyonCore.h"
 #include "VeyonMasterInterface.h"
 
 
@@ -105,7 +106,7 @@ TaskManagerDialog::TaskManagerDialog( TaskManagerPlugin& plugin, VeyonMasterInte
 	m_master( master )
 {
 	setWindowTitle( tr( "Remote Task Manager" ) );
-	setWindowIcon( QIcon( QStringLiteral(":/taskmanager/taskmanager.png") ) );
+	setWindowIcon( VeyonCore::icon( QStringLiteral("veyon-task-manager") ) );
 	resize( 1100, 700 );
 
 	auto mainLayout = new QVBoxLayout( this );
@@ -124,8 +125,8 @@ TaskManagerDialog::TaskManagerDialog( TaskManagerPlugin& plugin, VeyonMasterInte
 	splitter->addWidget( computerPanel );
 
 	m_tabWidget = new QTabWidget;
-	m_tabWidget->addTab( createProcessesPage(), QIcon( QStringLiteral(":/taskmanager/taskmanager.png") ), tr( "Programs" ) );
-	m_tabWidget->addTab( createRulesPage(), QIcon( QStringLiteral(":/taskmanager/application-control.png") ), tr( "App rules" ) );
+	m_tabWidget->addTab( createProcessesPage(), VeyonCore::icon( QStringLiteral("veyon-task-manager") ), tr( "Programs" ) );
+	m_tabWidget->addTab( createRulesPage(), VeyonCore::icon( QStringLiteral("veyon-application-control") ), tr( "App rules" ) );
 	splitter->addWidget( m_tabWidget );
 	splitter->setStretchFactor( 0, 1 );
 	splitter->setStretchFactor( 1, 4 );
@@ -227,7 +228,7 @@ QWidget* TaskManagerDialog::createProcessesPage()
 	m_processStatusLabel = new QLabel;
 	actionLayout->addWidget( m_processStatusLabel, 1 );
 
-	auto blockButton = new QPushButton( QIcon( QStringLiteral(":/taskmanager/application-control.png") ), tr( "Block program…" ) );
+	auto blockButton = new QPushButton( VeyonCore::icon( QStringLiteral("veyon-application-control") ), tr( "Block program…" ) );
 	auto blockMenu = new QMenu( blockButton );
 	blockMenu->addAction( tr( "Add to blacklist" ), this, [this]() { addSelectedProcessesToRules( ApplicationRules::Mode::Blacklist ); } );
 	blockMenu->addAction( tr( "Add to whitelist" ), this, [this]() { addSelectedProcessesToRules( ApplicationRules::Mode::Whitelist ); } );
@@ -352,7 +353,7 @@ void TaskManagerDialog::updateComputerList()
 		}
 		if( rules.isActive() )
 		{
-			item->setIcon( QIcon( QStringLiteral(":/taskmanager/application-control.png") ) );
+			item->setIcon( VeyonCore::icon( QStringLiteral("veyon-application-control") ) );
 		}
 		m_computerList->addItem( item );
 

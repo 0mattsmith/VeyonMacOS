@@ -1,7 +1,22 @@
 <RCC>
-    <qresource prefix="/powercontrol" >
-        <file>preferences-system-power-management.png</file>
-        <file>system-shutdown.png</file>
-        <file>system-reboot.png</file>
+    <qresource prefix="/icons/veyon-modern">
+        <file alias="scalable/veyon-power-on.png">icons/modern/veyon-power-on.png</file>
+        <file alias="scalable/veyon-reboot.png">icons/modern/veyon-reboot.png</file>
+        <file alias="scalable/veyon-power-down.png">icons/modern/veyon-power-down.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-monochrome">
+        <file alias="scalable/veyon-power-on.png">icons/monochrome/veyon-power-on.png</file>
+        <file alias="scalable/veyon-reboot.png">icons/monochrome/veyon-reboot.png</file>
+        <file alias="scalable/veyon-power-down.png">icons/monochrome/veyon-power-down.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-monochrome-dark">
+        <file alias="scalable/veyon-power-on.png">icons/monochrome-dark/veyon-power-on.png</file>
+        <file alias="scalable/veyon-reboot.png">icons/monochrome-dark/veyon-reboot.png</file>
+        <file alias="scalable/veyon-power-down.png">icons/monochrome-dark/veyon-power-down.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-classic">
+        <file alias="scalable/veyon-power-on.png">icons/classic/veyon-power-on.png</file>
+        <file alias="scalable/veyon-reboot.png">icons/classic/veyon-reboot.png</file>
+        <file alias="scalable/veyon-power-down.png">icons/classic/veyon-power-down.png</file>
     </qresource>
 </RCC>

@@ -1,8 +1,26 @@
 <RCC>
-    <qresource prefix="/demo" >
-        <file>demo.png</file>
-        <file>presentation-fullscreen.png</file>
-        <file>presentation-window.png</file>
-        <file>window-duplicate.png</file>
+    <qresource prefix="/icons/veyon-modern">
+        <file alias="scalable/veyon-demo.png">icons/modern/veyon-demo.png</file>
+        <file alias="scalable/veyon-demo-fullscreen.png">icons/modern/veyon-demo-fullscreen.png</file>
+        <file alias="scalable/veyon-demo-window.png">icons/modern/veyon-demo-window.png</file>
+        <file alias="scalable/veyon-demo-server.png">icons/modern/veyon-demo-server.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-monochrome">
+        <file alias="scalable/veyon-demo.png">icons/monochrome/veyon-demo.png</file>
+        <file alias="scalable/veyon-demo-fullscreen.png">icons/monochrome/veyon-demo-fullscreen.png</file>
+        <file alias="scalable/veyon-demo-window.png">icons/monochrome/veyon-demo-window.png</file>
+        <file alias="scalable/veyon-demo-server.png">icons/monochrome/veyon-demo-server.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-monochrome-dark">
+        <file alias="scalable/veyon-demo.png">icons/monochrome-dark/veyon-demo.png</file>
+        <file alias="scalable/veyon-demo-fullscreen.png">icons/monochrome-dark/veyon-demo-fullscreen.png</file>
+        <file alias="scalable/veyon-demo-window.png">icons/monochrome-dark/veyon-demo-window.png</file>
+        <file alias="scalable/veyon-demo-server.png">icons/monochrome-dark/veyon-demo-server.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-classic">
+        <file alias="scalable/veyon-demo.png">icons/classic/veyon-demo.png</file>
+        <file alias="scalable/veyon-demo-fullscreen.png">icons/classic/veyon-demo-fullscreen.png</file>
+        <file alias="scalable/veyon-demo-window.png">icons/classic/veyon-demo-window.png</file>
+        <file alias="scalable/veyon-demo-server.png">icons/classic/veyon-demo-server.png</file>
     </qresource>
 </RCC>

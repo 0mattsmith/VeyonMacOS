@@ -6,8 +6,8 @@
    <string>Windows</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="windows.qrc">
-    <normaloff>:/windows/windows-logo.png</normaloff>:/windows/windows-logo.png</iconset>
+   <iconset theme="veyon-windows">
+    <normaloff>:/icons/veyon-modern/scalable/veyon-windows.png</normaloff>:/icons/veyon-modern/scalable/veyon-windows.png</iconset>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <property name="topMargin">

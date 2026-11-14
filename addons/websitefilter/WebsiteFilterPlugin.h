@@ -112,7 +112,7 @@ public:
 
 	QString addOnIconUrl() const override
 	{
-		return QStringLiteral(":/websitefilter/website-filter.png");
+		return QStringLiteral("veyon-website-filter");
 	}
 
 	QString addOnSummary() const override

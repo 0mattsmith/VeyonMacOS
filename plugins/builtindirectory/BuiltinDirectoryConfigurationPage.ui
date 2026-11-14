@@ -6,8 +6,8 @@
    <string>Locations &amp; computers</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="builtindirectory.qrc">
-    <normaloff>:/builtindirectory/builtindirectory.png</normaloff>:/builtindirectory/builtindirectory.png</iconset>
+   <iconset theme="veyon-builtin-directory">
+    <normaloff>:/icons/veyon-modern/scalable/veyon-builtin-directory.png</normaloff>:/icons/veyon-modern/scalable/veyon-builtin-directory.png</iconset>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="topMargin">

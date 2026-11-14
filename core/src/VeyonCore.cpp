@@ -306,6 +306,64 @@ bool VeyonCore::useDarkMode()
 
 
 
+QString VeyonCore::iconThemeName()
+{
+	switch (config().uiIconTheme())
+	{
+	case UiIconTheme::Monochrome:
+		return useDarkMode() ? QStringLiteral("veyon-monochrome-dark") : QStringLiteral("veyon-monochrome");
+	case UiIconTheme::Classic:
+		return QStringLiteral("veyon-classic");
+	case UiIconTheme::Modern:
+		break;
+	}
+
+	return QStringLiteral("veyon-modern");
+}
+
+
+
+QIcon VeyonCore::icon( const QString& name )
+{
+	if( name.isEmpty() )
+	{
+		return {};
+	}
+
+	// file names and resource paths (e.g. icons of script add-ons) are loaded as they are
+	if( name.contains( QLatin1Char('/') ) || name.contains( QLatin1Char('\\') ) || name.contains( QLatin1Char('.') ) )
+	{
+		return QIcon( name );
+	}
+
+	return QIcon::fromTheme( name, QIcon( QStringLiteral(":/icons/veyon-modern/scalable/%1.png").arg( name ) ) );
+}
+
+
+
+void VeyonCore::applyIconTheme()
+{
+	// the icon sets are shipped as icon themes in the resources below :/icons
+	const auto resourceIconPath = QStringLiteral(":/icons");
+	auto searchPaths = QIcon::themeSearchPaths();
+	if( searchPaths.contains( resourceIconPath ) == false )
+	{
+		searchPaths.append( resourceIconPath );
+		QIcon::setThemeSearchPaths( searchPaths );
+	}
+
+	// keep the icons of the platform's icon theme (e.g. in file dialogs) available
+	const auto platformThemeName = QIcon::themeName();
+	if( platformThemeName.isEmpty() == false && platformThemeName.startsWith( QLatin1String("veyon-") ) == false )
+	{
+		QIcon::setFallbackThemeName( platformThemeName );
+	}
+
+	QIcon::setThemeName( iconThemeName() );
+}
+
+
+
 bool VeyonCore::isDebugging()
 {
 	return s_instance && s_instance->m_debugging;
@@ -667,6 +725,16 @@ void VeyonCore::initUi()
 			break;
 		default:
 			break;
+		}
+#endif
+
+		applyIconTheme();
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+		if (config().uiIconTheme() == UiIconTheme::Monochrome)
+		{
+			// switch between the dark and light monochrome icons along with the system's colour scheme
+			connect(QGuiApplication::styleHints(), &QStyleHints::colorSchemeChanged, this, []() { applyIconTheme(); });
 		}
 #endif
 	}

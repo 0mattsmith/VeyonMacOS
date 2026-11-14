@@ -186,7 +186,7 @@ AddOnStoreWidget::AddOnStoreWidget( Mode mode, QWidget* parent ) :
 	// header
 	auto headerLayout = new QHBoxLayout;
 	auto headerIcon = new QLabel;
-	headerIcon->setPixmap( QIcon( QStringLiteral(":/core/addon-store.png") ).pixmap( 48, 48 ) );
+	headerIcon->setPixmap( VeyonCore::icon( QStringLiteral("veyon-addon-store") ).pixmap( 48, 48 ) );
 	headerLayout->addWidget( headerIcon );
 
 	auto headerTextLayout = new QVBoxLayout;
@@ -230,7 +230,7 @@ AddOnStoreWidget::AddOnStoreWidget( Mode mode, QWidget* parent ) :
 	connect( installButton, &QPushButton::clicked, this, &AddOnStoreWidget::installFromFile );
 	toolLayout->addWidget( installButton );
 
-	auto createButton = new QPushButton( QIcon( QStringLiteral(":/core/addon-script.png") ), tr( "Create add-on…" ) );
+	auto createButton = new QPushButton( VeyonCore::icon( QStringLiteral("veyon-addon-script") ), tr( "Create add-on…" ) );
 	createButton->setToolTip( tr( "Create your own add-on which runs scripts on student computers" ) );
 	connect( createButton, &QPushButton::clicked, this, &AddOnStoreWidget::createScriptAddOn );
 	toolLayout->addWidget( createButton );
@@ -327,7 +327,7 @@ QIcon AddOnStoreWidget::addOnIcon( const AddOnManager::AddOn& addOn )
 
 	if( addOn.iconUrl.isEmpty() == false )
 	{
-		const QIcon icon( addOn.iconUrl );
+		const auto icon = VeyonCore::icon( addOn.iconUrl );
 		if( icon.isNull() == false && icon.availableSizes().isEmpty() == false )
 		{
 			return icon;
@@ -336,10 +336,10 @@ QIcon AddOnStoreWidget::addOnIcon( const AddOnManager::AddOn& addOn )
 
 	if( addOn.packageType == QLatin1String("script") )
 	{
-		return QIcon( QStringLiteral(":/core/addon-script.png") );
+		return VeyonCore::icon( QStringLiteral("veyon-addon-script") );
 	}
 
-	return QIcon( QStringLiteral(":/core/addon-generic.png") );
+	return VeyonCore::icon( QStringLiteral("veyon-addon-generic") );
 }
 
 

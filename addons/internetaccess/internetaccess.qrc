@@ -1,6 +1,18 @@
 <RCC>
-  <qresource prefix="/internetaccess">
-    <file alias="internet-access.png">resources/internet-access.png</file>
-    <file alias="internet-block.png">resources/internet-block.png</file>
+  <qresource prefix="/icons/veyon-modern">
+    <file alias="scalable/veyon-internet-access.png">resources/icons/modern/veyon-internet-access.png</file>
+    <file alias="scalable/veyon-internet-block.png">resources/icons/modern/veyon-internet-block.png</file>
+  </qresource>
+  <qresource prefix="/icons/veyon-monochrome">
+    <file alias="scalable/veyon-internet-access.png">resources/icons/monochrome/veyon-internet-access.png</file>
+    <file alias="scalable/veyon-internet-block.png">resources/icons/monochrome/veyon-internet-block.png</file>
+  </qresource>
+  <qresource prefix="/icons/veyon-monochrome-dark">
+    <file alias="scalable/veyon-internet-access.png">resources/icons/monochrome-dark/veyon-internet-access.png</file>
+    <file alias="scalable/veyon-internet-block.png">resources/icons/monochrome-dark/veyon-internet-block.png</file>
+  </qresource>
+  <qresource prefix="/icons/veyon-classic">
+    <file alias="scalable/veyon-internet-access.png">resources/icons/classic/veyon-internet-access.png</file>
+    <file alias="scalable/veyon-internet-block.png">resources/icons/classic/veyon-internet-block.png</file>
   </qresource>
 </RCC>

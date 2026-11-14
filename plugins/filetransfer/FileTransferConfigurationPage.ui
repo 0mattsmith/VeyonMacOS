@@ -6,8 +6,8 @@
    <string>File transfer</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="filetransfer.qrc">
-    <normaloff>:/filetransfer/distribute-files-dark.png</normaloff>:/filetransfer/distribute-files-dark.png</iconset>
+   <iconset theme="veyon-file-transfer-settings">
+    <normaloff>:/icons/veyon-modern/scalable/veyon-file-transfer-settings.png</normaloff>:/icons/veyon-modern/scalable/veyon-file-transfer-settings.png</iconset>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="topMargin">

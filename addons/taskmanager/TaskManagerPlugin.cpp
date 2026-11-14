@@ -42,7 +42,7 @@ TaskManagerPlugin::TaskManagerPlugin( QObject* parent ) :
 						  tr( "Tasks" ), {},
 						  tr( "Open the remote task manager to view and end programs on student computers "
 							  "or to allow and block applications." ),
-						  QStringLiteral(":/taskmanager/taskmanager.png") ),
+						  QStringLiteral("veyon-task-manager") ),
 	// only used to signal active application rules on computer tiles
 	m_applicationRulesFeature( QStringLiteral("ApplicationRules"),
 							   Feature::Flag::Meta | Feature::Flag::AllComponents,
@@ -50,7 +50,7 @@ TaskManagerPlugin::TaskManagerPlugin( QObject* parent ) :
 							   Feature::Uid(),
 							   tr( "App rules" ), {},
 							   tr( "Application rules are active" ),
-							   QStringLiteral(":/taskmanager/application-control.png") ),
+							   QStringLiteral("veyon-application-control") ),
 	m_features( { m_taskManagerFeature, m_applicationRulesFeature } )
 {
 	if( AddOnUtils::isServer() )

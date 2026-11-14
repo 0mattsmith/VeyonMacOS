@@ -52,14 +52,14 @@ DesktopServicesFeaturePlugin::DesktopServicesFeaturePlugin( QObject* parent ) :
 						 Feature::Uid(),
 						 tr( "Start application" ), {},
 						 tr( "Click this button to start an application on all computers." ),
-						 QStringLiteral(":/desktopservices/preferences-desktop-launch-feedback.png") ),
+						 QStringLiteral("veyon-start-app") ),
 	m_openWebsiteFeature( QStringLiteral( "OpenWebsite" ),
 						  Feature::Flag::Action | Feature::Flag::AllComponents,
 						  Feature::Uid( "8a11a75d-b3db-48b6-b9cb-f8422ddd5b0c" ),
 						  Feature::Uid(),
 						  tr( "Open website" ), {},
 						  tr( "Click this button to open a website on all computers." ),
-						  QStringLiteral(":/desktopservices/internet-web-browser.png") ),
+						  QStringLiteral("veyon-open-website") ),
 	m_features( { m_startAppFeature, m_openWebsiteFeature } )
 {
 	connect( VeyonCore::instance(), &VeyonCore::applicationLoaded,

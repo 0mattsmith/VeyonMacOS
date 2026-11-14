@@ -47,6 +47,7 @@
 
 #include "AddOnUtils.h"
 #include "FileSenderDialog.h"
+#include "VeyonCore.h"
 
 
 namespace {
@@ -109,7 +110,7 @@ FileSenderDialog::FileSenderDialog( FileSenderPlugin& plugin, const ComputerCont
 	m_plugin( plugin )
 {
 	setWindowTitle( tr( "Send files" ) );
-	setWindowIcon( QIcon( QStringLiteral(":/filesender/file-send.png") ) );
+	setWindowIcon( VeyonCore::icon( QStringLiteral("veyon-file-send") ) );
 	resize( 820, 720 );
 
 	auto mainLayout = new QVBoxLayout( this );
@@ -201,7 +202,7 @@ FileSenderDialog::FileSenderDialog( FileSenderPlugin& plugin, const ComputerCont
 
 	auto buttonBox = new QDialogButtonBox;
 	m_sendButton = buttonBox->addButton( tr( "Send" ), QDialogButtonBox::AcceptRole );
-	m_sendButton->setIcon( QIcon( QStringLiteral(":/filesender/file-send.png") ) );
+	m_sendButton->setIcon( VeyonCore::icon( QStringLiteral("veyon-file-send") ) );
 	m_cancelButton = buttonBox->addButton( tr( "Stop" ), QDialogButtonBox::ActionRole );
 	m_cancelButton->setEnabled( false );
 	buttonBox->addButton( QDialogButtonBox::Close );

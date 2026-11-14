@@ -6,8 +6,8 @@
    <string>Authentication keys</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="../../core/resources/core.qrc">
-    <normaloff>:/core/application-x-pem-key.png</normaloff>:/core/application-x-pem-key.png</iconset>
+   <iconset theme="veyon-authentication-keys">
+    <normaloff>:/icons/veyon-modern/scalable/veyon-authentication-keys.png</normaloff>:/icons/veyon-modern/scalable/veyon-authentication-keys.png</iconset>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="topMargin">

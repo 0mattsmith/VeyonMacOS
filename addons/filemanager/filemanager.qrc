@@ -1,5 +1,14 @@
 <RCC>
-  <qresource prefix="/filemanager">
-    <file alias="filemanager.png">resources/filemanager.png</file>
+  <qresource prefix="/icons/veyon-modern">
+    <file alias="scalable/veyon-file-manager.png">resources/icons/modern/veyon-file-manager.png</file>
+  </qresource>
+  <qresource prefix="/icons/veyon-monochrome">
+    <file alias="scalable/veyon-file-manager.png">resources/icons/monochrome/veyon-file-manager.png</file>
+  </qresource>
+  <qresource prefix="/icons/veyon-monochrome-dark">
+    <file alias="scalable/veyon-file-manager.png">resources/icons/monochrome-dark/veyon-file-manager.png</file>
+  </qresource>
+  <qresource prefix="/icons/veyon-classic">
+    <file alias="scalable/veyon-file-manager.png">resources/icons/classic/veyon-file-manager.png</file>
   </qresource>
 </RCC>

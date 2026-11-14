@@ -6,8 +6,8 @@
    <string>Demo server</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="demo.qrc">
-    <normaloff>:/demo/window-duplicate.png</normaloff>:/demo/window-duplicate.png</iconset>
+   <iconset theme="veyon-demo-server">
+    <normaloff>:/icons/veyon-modern/scalable/veyon-demo-server.png</normaloff>:/icons/veyon-modern/scalable/veyon-demo-server.png</iconset>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="topMargin">

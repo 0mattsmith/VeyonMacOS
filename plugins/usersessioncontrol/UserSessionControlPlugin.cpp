@@ -40,14 +40,14 @@ UserSessionControlPlugin::UserSessionControlPlugin( QObject* parent ) :
 						Feature::Uid(),
 						tr( "Log in" ), {},
 						tr( "Click this button to log in a specific user on all computers." ),
-						QStringLiteral( ":/usersessioncontrol/login-user.png" ) ),
+						QStringLiteral("veyon-log-in") ),
 	m_userLogoffFeature( QStringLiteral( "UserLogoff" ),
 						 Feature::Flag::Action | Feature::Flag::Master | Feature::Flag::Service,
 						 Feature::Uid( "7311d43d-ab53-439e-a03a-8cb25f7ed526" ),
 						 Feature::Uid(),
 						 tr( "Log off" ), {},
 						 tr( "Click this button to log off users from all computers." ),
-						 QStringLiteral( ":/usersessioncontrol/logout-user.png" ) ),
+						 QStringLiteral("veyon-log-off") ),
 	m_features( { m_userLoginFeature, m_userLogoffFeature } )
 {
 }

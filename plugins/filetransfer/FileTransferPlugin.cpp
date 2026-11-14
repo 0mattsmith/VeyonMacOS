@@ -69,14 +69,14 @@ FileTransferPlugin::FileTransferPlugin( QObject* parent ) :
 							 Feature::Uid(),
 							 tr("Distribute"), {},
 							 tr("Click this button to distribute files from your computer to all computers."),
-							 QStringLiteral(":/filetransfer/distribute-files.png") ),
+							 QStringLiteral("veyon-file-transfer") ),
 	m_collectFilesFeature(QStringLiteral("FileCollect"),
 						  Feature::Flag::Action | Feature::Flag::AllComponents,
 						  Feature::Uid("5a14c971-e93c-457f-97a0-0b8f1058a58e"),
 						  Feature::Uid(),
 						  tr("Collect" ), {},
 						  tr("Click this button to collect files from all computers to your computer."),
-						  QStringLiteral(":/filetransfer/collect-files.png")),
+						  QStringLiteral("veyon-collect-files")),
 	m_configuration(&VeyonCore::config())
 {
 }

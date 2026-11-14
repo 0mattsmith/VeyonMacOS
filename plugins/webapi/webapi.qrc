@@ -1,5 +1,14 @@
 <RCC>
-    <qresource prefix="/webapi" >
-        <file>webapi.png</file>
+    <qresource prefix="/icons/veyon-modern">
+        <file alias="scalable/veyon-web-api.png">icons/modern/veyon-web-api.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-monochrome">
+        <file alias="scalable/veyon-web-api.png">icons/monochrome/veyon-web-api.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-monochrome-dark">
+        <file alias="scalable/veyon-web-api.png">icons/monochrome-dark/veyon-web-api.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-classic">
+        <file alias="scalable/veyon-web-api.png">icons/classic/veyon-web-api.png</file>
     </qresource>
 </RCC>

@@ -39,7 +39,7 @@ ScreenshotFeaturePlugin::ScreenshotFeaturePlugin( QObject* parent ) :
 								  Feature::Uid(),
 								  tr( "Screenshot" ), {},
 								  tr( "Use this function to take a screenshot of selected computers." ),
-								  QStringLiteral(":/screenshot/camera-photo.png") ) ),
+								  QStringLiteral("veyon-screenshot") ) ),
 	m_features( { m_screenshotFeature } )
 {
 }

@@ -36,6 +36,7 @@
 #include "AddOnUtils.h"
 #include "ScriptOutputDialog.h"
 #include "ScriptedAddOnsPlugin.h"
+#include "VeyonCore.h"
 
 
 ScriptOutputDialog::ScriptOutputDialog( ScriptedAddOnsPlugin& plugin, QUuid requestId, const QString& actionName,
@@ -44,7 +45,7 @@ ScriptOutputDialog::ScriptOutputDialog( ScriptedAddOnsPlugin& plugin, QUuid requ
 	m_requestId( requestId )
 {
 	setWindowTitle( tr( "Results of \"%1\"" ).arg( actionName ) );
-	setWindowIcon( QIcon( QStringLiteral(":/scriptedaddons/scripted-addons.png") ) );
+	setWindowIcon( VeyonCore::icon( QStringLiteral("veyon-scripted-addons") ) );
 	resize( 800, 560 );
 
 	auto layout = new QVBoxLayout( this );

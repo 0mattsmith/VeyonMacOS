@@ -1,5 +1,0 @@
-<RCC>
-    <qresource prefix="/screenshot" >
-        <file>camera-photo.png</file>
-    </qresource>
-</RCC>
