@@ -50,7 +50,7 @@ DesktopServicesFeaturePlugin::DesktopServicesFeaturePlugin( QObject* parent ) :
 						 Feature::Flag::Action | Feature::Flag::AllComponents,
 						 Feature::Uid( "da9ca56a-b2ad-4fff-8f8a-929b2927b442" ),
 						 Feature::Uid(),
-						 tr( "Start application" ), {},
+						 tr( "Start app" ), {},
 						 tr( "Click this button to start an application on all computers." ),
 						 QStringLiteral(":/desktopservices/preferences-desktop-launch-feedback.png") ),
 	m_openWebsiteFeature( QStringLiteral( "OpenWebsite" ),

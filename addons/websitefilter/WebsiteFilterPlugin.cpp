@@ -43,7 +43,7 @@ WebsiteFilterPlugin::WebsiteFilterPlugin( QObject* parent ) :
 							Feature::Flag::Action | Feature::Flag::AllComponents,
 							Feature::Uid( "9c4f2a7e-61d8-4b35-a0e9-5f3b8d2c7a16" ),
 							Feature::Uid(),
-							tr( "Websites" ), {},
+							tr( "Web filter" ), {},
 							tr( "Block websites or allow selected websites only" ),
 							QStringLiteral(":/websitefilter/website-filter.png") ),
 	m_activeIndicatorFeature( QStringLiteral("WebsiteFilterActiveIndicator"),

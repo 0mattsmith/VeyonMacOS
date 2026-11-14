@@ -162,6 +162,13 @@ jobs:
           sudo launchctl print system/io.veyon.veyon-service | grep -E "state|pid"
           pgrep -lx veyon-server || echo "(veyon-server is not running)"
 
+          # key file authentication with a key readable by the runner user lets Veyon Master get past the
+          # authentication check (instead of asking for a username and password) and show its main window -
+          # the screenshot below shows its toolbar
+          sudo "$cli" config set Authentication/Method 1
+          sudo "$cli" authkeys create teacher
+          sudo "$cli" authkeys setaccessgroup teacher/private "$(id -gn)"
+
           # open Veyon.app like Finder does while the service is running - Veyon Master has to start and keep running
           # (macOS must not treat the running veyon-server as an instance of Veyon.app)
           open /Applications/Veyon.app
@@ -172,6 +179,8 @@ jobs:
             exit 1
           fi
           echo "Veyon Master is running"
+          mkdir -p screenshots
+          screencapture -x screenshots/veyon-master.png || echo "(could not take a screenshot)"
           pkill -x veyon-master
 
           sudo /Applications/Veyon.app/Contents/Resources/uninstall.sh --purge
@@ -287,6 +296,13 @@ jobs:
           sudo sh -c "cat '$dir/ca.pem' >> /etc/ssl/cert.pem"
           query_base_dn 2 0 "$ldaps_url" || { echo "::error::LDAPS with the CA certificates of macOS failed" ; exit 1 ; }
           query_base_dn 1 0 "$starttls_url" || { echo "::error::StartTLS with the CA certificates of macOS failed" ; exit 1 ; }
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: veyon-master-screenshot-${{ runner.arch }}
+          path: screenshots/
+          if-no-files-found: ignore
 
       - uses: actions/upload-artifact@v4
         with:
