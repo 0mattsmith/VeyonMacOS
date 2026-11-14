@@ -37,14 +37,20 @@ MacOsPlatformPlugin::MacOsPlatformPlugin( QObject* parent ) :
 	// don't abort with SIGPIPE when writing to closed sockets e.g. while shutting down VncConnection
 	::signal( SIGPIPE, SIG_IGN );
 
-	// all programs are located in Veyon.app and therefore share its Info.plist - only Veyon Master and
-	// Veyon Configurator should appear in the Dock while the server, workers and veyon-cli run in the background
+	// Only Veyon Master and Veyon Configurator should appear in the Dock while the server and the workers run in
+	// the background. VeyonCore::setupApplicationParameters() keeps Qt from turning them into regular applications,
+	// so they start as prohibited applications (no Dock icon, but no windows either) and are made accessory
+	// applications here: still no Dock icon, but windows (screen lock, messages) and menu bar extras work.
 	const auto component = VeyonCore::component();
 	if( qobject_cast<QGuiApplication *>( QCoreApplication::instance() ) &&
 		component != VeyonCore::Component::Master && component != VeyonCore::Component::Configurator )
 	{
 		MacOsCocoaHelpers::hideFromDock();
 	}
+
+	// the variable has done its job - don't pass it on to programs started from here, e.g. Veyon Master or
+	// Veyon Configurator opened via the menu bar icon, as they would end up without Dock icon and menu bar
+	qunsetenv( "QT_MAC_DISABLE_FOREGROUND_APPLICATION_TRANSFORM" );
 }
 
 

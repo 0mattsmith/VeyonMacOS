@@ -31,7 +31,7 @@
 
 int main( int argc, char **argv )
 {
-	VeyonCore::setupApplicationParameters();
+	VeyonCore::setupApplicationParameters( VeyonCore::Component::Worker );
 
 	QApplication app( argc, argv );
 	app.setWindowIcon( QIcon( QStringLiteral(":/core/icon64.png") ) );

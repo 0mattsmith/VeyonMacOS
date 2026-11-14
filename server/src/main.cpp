@@ -29,7 +29,7 @@
 
 int main( int argc, char **argv )
 {
-	VeyonCore::setupApplicationParameters();
+	VeyonCore::setupApplicationParameters( VeyonCore::Component::Server );
 
 	QGuiApplication app( argc, argv );
 	QGuiApplication::setDesktopFileName(QStringLiteral("io.veyon.veyon-server"));

@@ -172,7 +172,8 @@ public:
 		return *( instance()->m_filesystem );
 	}
 
-	static void setupApplicationParameters();
+	//! \brief Sets up application-wide parameters - must be called before the application object is created
+	static void setupApplicationParameters( Component component );
 	bool initAuthentication();
 
 	static int sessionId()
