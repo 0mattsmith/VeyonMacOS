@@ -53,6 +53,7 @@
 #include "Filesystem.h"
 #include "PlatformUserFunctions.h"
 #include "ScriptAddOnEditorDialog.h"
+#include "VeyonCore.h"
 
 
 namespace {
@@ -119,7 +120,7 @@ ScriptAddOnEditorDialog::ScriptAddOnEditorDialog( const QJsonObject& manifest, Q
 	m_iconData( QByteArray::fromBase64( manifest[QStringLiteral("icon")].toString().toLatin1() ) )
 {
 	setWindowTitle( tr( "Script add-on editor" ) );
-	setWindowIcon( QIcon( QStringLiteral(":/core/addon-script.png") ) );
+	setWindowIcon( VeyonCore::icon( QStringLiteral("veyon-addon-script") ) );
 	resize( 980, 700 );
 
 	auto mainLayout = new QVBoxLayout( this );
@@ -273,7 +274,7 @@ ScriptAddOnEditorDialog::ScriptAddOnEditorDialog( const QJsonObject& manifest, Q
 	connect( buttonBox, &QDialogButtonBox::rejected, this, &ScriptAddOnEditorDialog::reject );
 	mainLayout->addWidget( buttonBox );
 
-	m_iconButton->setIcon( m_iconData.isEmpty() ? QIcon( QStringLiteral(":/core/addon-script.png") )
+	m_iconButton->setIcon( m_iconData.isEmpty() ? VeyonCore::icon( QStringLiteral("veyon-addon-script") )
 												: QIcon( QPixmap::fromImage( QImage::fromData( m_iconData ) ) ) );
 
 	connect( m_actionList, &QListWidget::currentRowChanged, this, [this]( int row ) {

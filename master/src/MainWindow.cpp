@@ -507,7 +507,7 @@ void MainWindow::addAddOnStoreButton()
 	spacer->setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Preferred );
 	ui->toolBar->addWidget( spacer );
 
-	auto addOnStoreButton = new ToolButton( QIcon( QStringLiteral(":/core/addon-store.png") ),
+	auto addOnStoreButton = new ToolButton( VeyonCore::icon( QStringLiteral("veyon-addon-store") ),
 											tr( "Add-Ons" ), {},
 											tr( "Open the Add-On Store to enable, disable, install or create add-ons." ) );
 	addOnStoreButton->setObjectName( QStringLiteral("AddOnStoreButton") );
@@ -563,7 +563,7 @@ void MainWindow::addFeaturesToToolBar()
 			continue;
 		}
 
-		auto btn = new ToolButton( QIcon( feature.iconUrl() ),
+		auto btn = new ToolButton( VeyonCore::icon( feature.iconUrl() ),
 										  feature.displayName(),
 										  feature.displayNameActive(),
 										  feature.description(),
@@ -613,7 +613,7 @@ void MainWindow::addSubFeaturesToToolButton( QToolButton* button, const Feature&
 
 	for( const auto& subFeature : subFeatures )
 	{
-		auto action = menu->addAction(QIcon(subFeature.iconUrl()), subFeature.displayName(),
+		auto action = menu->addAction(VeyonCore::icon( subFeature.iconUrl() ), subFeature.displayName(),
 							   #if QT_VERSION >= QT_VERSION_CHECK(6, 3, 0)
 									  subFeature.shortcut(),
 							   #endif

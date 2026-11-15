@@ -1,5 +1,14 @@
 <RCC>
-    <qresource prefix="/textmessage" >
-        <file>dialog-information.png</file>
+    <qresource prefix="/icons/veyon-modern">
+        <file alias="scalable/veyon-text-message.png">icons/modern/veyon-text-message.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-monochrome">
+        <file alias="scalable/veyon-text-message.png">icons/monochrome/veyon-text-message.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-monochrome-dark">
+        <file alias="scalable/veyon-text-message.png">icons/monochrome-dark/veyon-text-message.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-classic">
+        <file alias="scalable/veyon-text-message.png">icons/classic/veyon-text-message.png</file>
     </qresource>
 </RCC>

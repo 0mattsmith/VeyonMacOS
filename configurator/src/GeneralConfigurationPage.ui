@@ -57,7 +57,7 @@
       <item row="1" column="0">
        <widget class="QLabel" name="label_41">
         <property name="text">
-         <string>Style:</string>
+         <string>Widget style:</string>
         </property>
        </widget>
       </item>
@@ -85,6 +85,35 @@
         <property name="text">
          <string>Language:</string>
         </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="uiIconThemeLabel">
+        <property name="text">
+         <string>Icon style:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QComboBox" name="uiIconTheme">
+        <property name="toolTip">
+         <string>The icon style is used for the icons of Veyon Master, Veyon Configurator and the add-ons. Changes take effect when the programs are started again.</string>
+        </property>
+        <item>
+         <property name="text">
+          <string>Modern</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Monochrome</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Classic</string>
+         </property>
+        </item>
        </widget>
       </item>
      </layout>
@@ -407,6 +436,7 @@
   <tabstop>uiLanguage</tabstop>
   <tabstop>uiStyle</tabstop>
   <tabstop>uiColorScheme</tabstop>
+  <tabstop>uiIconTheme</tabstop>
   <tabstop>authenticationMethod</tabstop>
   <tabstop>testAuthenticationButton</tabstop>
   <tabstop>networkObjectDirectoryPlugin</tabstop>

@@ -1,10 +1,30 @@
 <RCC>
-    <qresource prefix="/remoteaccess">
-        <file>preferences-system-windows-effect-desktopgrid.png</file>
-        <file>application-exit.png</file>
-        <file>krdc.png</file>
-        <file>kmag.png</file>
-        <file>camera-photo.png</file>
-        <file>preferences-desktop-keyboard.png</file>
+    <qresource prefix="/icons/veyon-modern">
+        <file alias="scalable/veyon-remote-view.png">icons/modern/veyon-remote-view.png</file>
+        <file alias="scalable/veyon-remote-control.png">icons/modern/veyon-remote-control.png</file>
+        <file alias="scalable/veyon-select-screen.png">icons/modern/veyon-select-screen.png</file>
+        <file alias="scalable/veyon-send-shortcut.png">icons/modern/veyon-send-shortcut.png</file>
+        <file alias="scalable/veyon-exit.png">icons/modern/veyon-exit.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-monochrome">
+        <file alias="scalable/veyon-remote-view.png">icons/monochrome/veyon-remote-view.png</file>
+        <file alias="scalable/veyon-remote-control.png">icons/monochrome/veyon-remote-control.png</file>
+        <file alias="scalable/veyon-select-screen.png">icons/monochrome/veyon-select-screen.png</file>
+        <file alias="scalable/veyon-send-shortcut.png">icons/monochrome/veyon-send-shortcut.png</file>
+        <file alias="scalable/veyon-exit.png">icons/monochrome/veyon-exit.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-monochrome-dark">
+        <file alias="scalable/veyon-remote-view.png">icons/monochrome-dark/veyon-remote-view.png</file>
+        <file alias="scalable/veyon-remote-control.png">icons/monochrome-dark/veyon-remote-control.png</file>
+        <file alias="scalable/veyon-select-screen.png">icons/monochrome-dark/veyon-select-screen.png</file>
+        <file alias="scalable/veyon-send-shortcut.png">icons/monochrome-dark/veyon-send-shortcut.png</file>
+        <file alias="scalable/veyon-exit.png">icons/monochrome-dark/veyon-exit.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-classic">
+        <file alias="scalable/veyon-remote-view.png">icons/classic/veyon-remote-view.png</file>
+        <file alias="scalable/veyon-remote-control.png">icons/classic/veyon-remote-control.png</file>
+        <file alias="scalable/veyon-select-screen.png">icons/classic/veyon-select-screen.png</file>
+        <file alias="scalable/veyon-send-shortcut.png">icons/classic/veyon-send-shortcut.png</file>
+        <file alias="scalable/veyon-exit.png">icons/classic/veyon-exit.png</file>
     </qresource>
 </RCC>

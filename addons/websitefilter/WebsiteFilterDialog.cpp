@@ -42,6 +42,7 @@
 
 #include "AddOnUtils.h"
 #include "Configuration/Object.h"
+#include "VeyonCore.h"
 #include "VeyonMasterInterface.h"
 #include "WebsiteFilterDialog.h"
 #include "WebsiteFilterPlugin.h"
@@ -84,7 +85,7 @@ WebsiteFilterDialog::WebsiteFilterDialog( WebsiteFilterPlugin& plugin, VeyonMast
 	m_master( master )
 {
 	setWindowTitle( tr( "Website Filter" ) );
-	setWindowIcon( QIcon( QStringLiteral(":/websitefilter/website-filter.png") ) );
+	setWindowIcon( VeyonCore::icon( QStringLiteral("veyon-website-filter") ) );
 	resize( 960, 640 );
 
 	auto mainLayout = new QVBoxLayout( this );
@@ -266,7 +267,7 @@ void WebsiteFilterDialog::updateComputerList()
 		}
 		if( state.active )
 		{
-			item->setIcon( QIcon( QStringLiteral(":/websitefilter/website-filter.png") ) );
+			item->setIcon( VeyonCore::icon( QStringLiteral("veyon-website-filter") ) );
 		}
 		m_computerList->addItem( item );
 

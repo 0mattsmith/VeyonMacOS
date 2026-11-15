@@ -27,13 +27,14 @@
 
 #include "AddOnStoreDialog.h"
 #include "AddOnStoreWidget.h"
+#include "VeyonCore.h"
 
 
 AddOnStoreDialog::AddOnStoreDialog( QWidget* parent ) :
 	QDialog( parent )
 {
 	setWindowTitle( tr( "Veyon Add-On Store" ) );
-	setWindowIcon( QIcon( QStringLiteral(":/core/addon-store.png") ) );
+	setWindowIcon( VeyonCore::icon( QStringLiteral("veyon-addon-store") ) );
 	resize( 920, 760 );
 
 	auto layout = new QVBoxLayout( this );

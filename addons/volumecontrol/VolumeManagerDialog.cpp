@@ -35,6 +35,7 @@
 #include <QVBoxLayout>
 
 #include "AddOnUtils.h"
+#include "VeyonCore.h"
 #include "VolumeManagerDialog.h"
 
 
@@ -53,7 +54,7 @@ QSlider* createVolumeSlider()
 QToolButton* createToggleButton( const QString& iconUrl, const QString& toolTip )
 {
 	auto button = new QToolButton;
-	button->setIcon( QIcon( iconUrl ) );
+	button->setIcon( VeyonCore::icon( iconUrl ) );
 	button->setIconSize( QSize( 22, 22 ) );
 	button->setCheckable( true );
 	button->setAutoRaise( true );
@@ -72,7 +73,7 @@ VolumeManagerDialog::VolumeManagerDialog( VolumeControlPlugin& plugin,
 	m_plugin( plugin )
 {
 	setWindowTitle( tr( "Volume Manager" ) );
-	setWindowIcon( QIcon( QStringLiteral(":/volumecontrol/volume.png") ) );
+	setWindowIcon( VeyonCore::icon( QStringLiteral("veyon-volume") ) );
 	resize( 640, 560 );
 
 	auto mainLayout = new QVBoxLayout( this );
@@ -103,20 +104,20 @@ VolumeManagerDialog::VolumeManagerDialog( VolumeControlPlugin& plugin,
 
 	auto buttonLayout = new QHBoxLayout;
 	const auto addButton = [&]( const QString& iconUrl, const QString& text, const std::function<void()>& handler ) {
-		auto button = new QPushButton( QIcon( iconUrl ), text );
+		auto button = new QPushButton( VeyonCore::icon( iconUrl ), text );
 		connect( button, &QPushButton::clicked, this, [this, handler]() {
 			handler();
 			QTimer::singleShot( 500, this, &VolumeManagerDialog::refresh );
 		} );
 		buttonLayout->addWidget( button );
 	};
-	addButton( QStringLiteral(":/volumecontrol/volume-mute.png"), tr( "Mute all" ),
+	addButton( QStringLiteral("veyon-volume-mute"), tr( "Mute all" ),
 			   [this]() { m_plugin.setMuted( connectedComputers(), true ); } );
-	addButton( QStringLiteral(":/volumecontrol/volume.png"), tr( "Unmute all" ),
+	addButton( QStringLiteral("veyon-volume"), tr( "Unmute all" ),
 			   [this]() { m_plugin.setMuted( connectedComputers(), false ); } );
-	addButton( QStringLiteral(":/volumecontrol/volume-lock.png"), tr( "Lock all" ),
+	addButton( QStringLiteral("veyon-volume-lock"), tr( "Lock all" ),
 			   [this]() { m_plugin.lockCurrent( connectedComputers(), m_persistentCheckBox->isChecked() ); } );
-	addButton( QStringLiteral(":/volumecontrol/volume.png"), tr( "Unlock all" ),
+	addButton( QStringLiteral("veyon-volume"), tr( "Unlock all" ),
 			   [this]() { m_plugin.unlock( connectedComputers() ); } );
 	allLayout->addLayout( buttonLayout );
 
@@ -189,8 +190,8 @@ void VolumeManagerDialog::rebuildRows()
 		row->slider->setEnabled( false );
 		row->levelLabel = new QLabel( QStringLiteral("–") );
 		row->levelLabel->setMinimumWidth( 40 );
-		row->muteButton = createToggleButton( QStringLiteral(":/volumecontrol/volume-mute.png"), tr( "Mute" ) );
-		row->lockButton = createToggleButton( QStringLiteral(":/volumecontrol/volume-lock.png"), tr( "Lock volume" ) );
+		row->muteButton = createToggleButton( QStringLiteral("veyon-volume-mute"), tr( "Mute" ) );
+		row->lockButton = createToggleButton( QStringLiteral("veyon-volume-lock"), tr( "Lock volume" ) );
 		row->muteButton->setEnabled( false );
 		row->lockButton->setEnabled( false );
 

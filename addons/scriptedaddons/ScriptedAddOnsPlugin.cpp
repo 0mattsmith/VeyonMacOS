@@ -272,7 +272,7 @@ bool ScriptedAddOnsPlugin::handleFeatureMessage( VeyonWorkerInterface& worker, c
 
 ConfigurationPage* ScriptedAddOnsPlugin::createConfigurationPage()
 {
-	auto page = new SimpleConfigurationPage( tr( "Script add-ons" ), QStringLiteral(":/scriptedaddons/scripted-addons.png") );
+	auto page = new SimpleConfigurationPage( tr( "Script add-ons" ), QStringLiteral("veyon-scripted-addons") );
 	page->addDescription( tr( "Script add-ons are created by teachers in the Add-On Store of Veyon Master. Their scripts "
 							  "are sent to the student computers and run there when the teacher clicks the add-on's button." ) );
 	page->addCheckBox( m_configuration.allowScriptsProperty(),
@@ -302,7 +302,7 @@ void ScriptedAddOnsPlugin::loadScriptAddOns()
 		AddOnManager::markScriptPackageLoaded( addOnUid );
 
 		const auto iconFile = manifest[QStringLiteral("_location")].toString() + QStringLiteral("/icon.png");
-		const auto iconUrl = QFile::exists( iconFile ) ? iconFile : QStringLiteral(":/scriptedaddons/scripted-addons.png");
+		const auto iconUrl = QFile::exists( iconFile ) ? iconFile : QStringLiteral("veyon-scripted-addons");
 		const auto addOnName = manifest[QStringLiteral("name")].toString();
 
 		// add-ons with multiple actions get a toolbar button with a menu

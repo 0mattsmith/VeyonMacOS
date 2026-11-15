@@ -50,7 +50,7 @@ FileManagerPlugin::FileManagerPlugin( QObject* parent ) :
 						  Feature::Uid(),
 						  tr( "Files" ), {},
 						  tr( "Browse the files of the logged on student to collect work or hand out files" ),
-						  QStringLiteral(":/filemanager/filemanager.png") ),
+						  QStringLiteral("veyon-file-manager") ),
 	m_features( { m_fileManagerFeature } ),
 	m_configuration( &VeyonCore::config() )
 {
@@ -218,7 +218,7 @@ bool FileManagerPlugin::handleFeatureMessage( VeyonWorkerInterface& worker, cons
 
 ConfigurationPage* FileManagerPlugin::createConfigurationPage()
 {
-	auto page = new SimpleConfigurationPage( tr( "File Manager" ), QStringLiteral(":/filemanager/filemanager.png") );
+	auto page = new SimpleConfigurationPage( tr( "File Manager" ), QStringLiteral("veyon-file-manager") );
 	page->addDescription( tr( "The Remote File Manager add-on lets teachers browse the files of the student logged on at a "
 							  "computer. All operations run with the permissions of the student." ) );
 	page->addCheckBox( m_configuration.notifyStudentsProperty(),

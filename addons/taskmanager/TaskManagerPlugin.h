@@ -116,7 +116,7 @@ public:
 
 	QString addOnIconUrl() const override
 	{
-		return QStringLiteral(":/taskmanager/taskmanager.png");
+		return QStringLiteral("veyon-task-manager");
 	}
 
 	QString addOnSummary() const override

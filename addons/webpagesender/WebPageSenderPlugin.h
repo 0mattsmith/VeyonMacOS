@@ -126,7 +126,7 @@ public:
 
 	QString addOnIconUrl() const override
 	{
-		return QStringLiteral(":/webpagesender/webpage-send.png");
+		return QStringLiteral("veyon-webpage-send");
 	}
 
 	QString addOnSummary() const override

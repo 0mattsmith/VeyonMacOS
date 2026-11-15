@@ -31,6 +31,7 @@
 #include "AddOnUtils.h"
 #include "Configuration/UiMapping.h"
 #include "SimpleConfigurationPage.h"
+#include "VeyonCore.h"
 
 
 SimpleConfigurationPage::SimpleConfigurationPage( const QString& title, const QString& iconUrl, QWidget* parent ) :
@@ -38,7 +39,7 @@ SimpleConfigurationPage::SimpleConfigurationPage( const QString& title, const QS
 	m_layout( new QVBoxLayout( this ) )
 {
 	setWindowTitle( title );
-	setWindowIcon( QIcon( iconUrl ) );
+	setWindowIcon( VeyonCore::icon( iconUrl ) );
 }
 
 

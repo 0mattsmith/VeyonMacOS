@@ -1,11 +1,28 @@
 <RCC>
     <qresource prefix="/filetransfer" >
-        <file>collect-files.png</file>
-        <file>distribute-files.png</file>
-        <file>distribute-files-dark.png</file>
         <file>file-scheduled.png</file>
         <file>file-transferring.png</file>
         <file>file-waiting.png</file>
         <file>file-finished.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-modern">
+        <file alias="scalable/veyon-file-transfer.png">icons/modern/veyon-file-transfer.png</file>
+        <file alias="scalable/veyon-collect-files.png">icons/modern/veyon-collect-files.png</file>
+        <file alias="scalable/veyon-file-transfer-settings.png">icons/modern/veyon-file-transfer-settings.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-monochrome">
+        <file alias="scalable/veyon-file-transfer.png">icons/monochrome/veyon-file-transfer.png</file>
+        <file alias="scalable/veyon-collect-files.png">icons/monochrome/veyon-collect-files.png</file>
+        <file alias="scalable/veyon-file-transfer-settings.png">icons/monochrome/veyon-file-transfer-settings.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-monochrome-dark">
+        <file alias="scalable/veyon-file-transfer.png">icons/monochrome-dark/veyon-file-transfer.png</file>
+        <file alias="scalable/veyon-collect-files.png">icons/monochrome-dark/veyon-collect-files.png</file>
+        <file alias="scalable/veyon-file-transfer-settings.png">icons/monochrome-dark/veyon-file-transfer-settings.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-classic">
+        <file alias="scalable/veyon-file-transfer.png">icons/classic/veyon-file-transfer.png</file>
+        <file alias="scalable/veyon-collect-files.png">icons/classic/veyon-collect-files.png</file>
+        <file alias="scalable/veyon-file-transfer-settings.png">icons/classic/veyon-file-transfer-settings.png</file>
     </qresource>
 </RCC>

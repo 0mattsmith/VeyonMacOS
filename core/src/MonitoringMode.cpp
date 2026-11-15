@@ -48,7 +48,7 @@ MonitoringMode::MonitoringMode( QObject* parent ) :
 							 Feature::Uid(),
 							 tr( "Monitoring" ), tr( "Monitoring" ),
 							 tr( "This mode allows you to monitor all computers at one or more locations." ),
-							 QStringLiteral( ":/core/presentation-none.png" ) ),
+							 QStringLiteral("veyon-monitoring") ),
 	m_queryApplicationVersionFeature( QStringLiteral("QueryApplicationVersion"),
 									  Feature::Flag::Service | Feature::Flag::Builtin,
 									  Feature::Uid{"58f5d5d5-9929-48f4-a995-f221c150ae26"}, {},

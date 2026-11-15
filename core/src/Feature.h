@@ -180,6 +180,7 @@ public:
 		return m_description;
 	}
 
+	//! icon theme name (e.g. "veyon-demo") or file name of the icon - load it with VeyonCore::icon()
 	const QString& iconUrl() const
 	{
 		return m_iconUrl;

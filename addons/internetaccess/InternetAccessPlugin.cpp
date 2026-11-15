@@ -52,34 +52,34 @@ InternetAccessPlugin::InternetAccessPlugin( QObject* parent ) :
 					   Feature::Uid(),
 					   tr( "Internet" ), {},
 					   tr( "Pause or resume internet access of student computers" ),
-					   QStringLiteral(":/internetaccess/internet-access.png") ),
+					   QStringLiteral("veyon-internet-access") ),
 	m_blockFeature( QStringLiteral("BlockInternet"),
 					Feature::Flag::Action | Feature::Flag::Master,
 					Feature::Uid( "f3a8d2c6-7e19-4b54-a6d0-8c1e5b9f2a43" ),
 					m_internetFeature.uid(),
 					tr( "Pause internet access" ), {},
 					tr( "Block internet access of the selected computers - the local network keeps working" ),
-					QStringLiteral(":/internetaccess/internet-block.png") ),
+					QStringLiteral("veyon-internet-block") ),
 	m_blockWithExceptionsFeature( QStringLiteral("BlockInternetWithExceptions"),
 								  Feature::Flag::Action | Feature::Flag::Master,
 								  Feature::Uid( "0c6e9b4d-2a73-4e18-b5f9-7d3a1c8e6b24" ),
 								  m_internetFeature.uid(),
 								  tr( "Pause internet access except…" ), {},
 								  tr( "Block internet access but allow selected websites" ),
-								  QStringLiteral(":/internetaccess/internet-block.png") ),
+								  QStringLiteral("veyon-internet-block") ),
 	m_allowFeature( QStringLiteral("AllowInternet"),
 					Feature::Flag::Action | Feature::Flag::Master,
 					Feature::Uid( "8e2d5a1f-c467-4b93-a0e8-3f6b9d2c7a15" ),
 					m_internetFeature.uid(),
 					tr( "Resume internet access" ), {},
 					tr( "Allow internet access on the selected computers again" ),
-					QStringLiteral(":/internetaccess/internet-access.png") ),
+					QStringLiteral("veyon-internet-access") ),
 	m_blockedIndicatorFeature( QStringLiteral("InternetBlockedIndicator"),
 							   Feature::Flag::Meta | Feature::Flag::AllComponents,
 							   Feature::Uid( "4d7a1e8c-9b36-4f02-8e5d-c2a6b9f3e174" ),
 							   Feature::Uid(),
 							   tr( "Internet paused" ), {}, {},
-							   QStringLiteral(":/internetaccess/internet-block.png") ),
+							   QStringLiteral("veyon-internet-block") ),
 	m_features( { m_internetFeature, m_blockFeature, m_blockWithExceptionsFeature, m_allowFeature, m_blockedIndicatorFeature } ),
 	m_configuration( &VeyonCore::config() )
 {
@@ -148,7 +148,7 @@ bool InternetAccessPlugin::startFeature( VeyonMasterInterface& master, const Fea
 
 	QDialog dialog( master.mainWindow() );
 	dialog.setWindowTitle( m_blockWithExceptionsFeature.displayName() );
-	dialog.setWindowIcon( QIcon( m_blockWithExceptionsFeature.iconUrl() ) );
+	dialog.setWindowIcon( VeyonCore::icon( m_blockWithExceptionsFeature.iconUrl() ) );
 	dialog.resize( 520, 420 );
 	auto layout = new QVBoxLayout( &dialog );
 	auto label = new QLabel( tr( "Internet access will be paused on %n computer(s). The following websites stay "
@@ -275,7 +275,7 @@ bool InternetAccessPlugin::revertSystemChanges( QString* errorString )
 
 ConfigurationPage* InternetAccessPlugin::createConfigurationPage()
 {
-	auto page = new SimpleConfigurationPage( tr( "Internet Access" ), QStringLiteral(":/internetaccess/internet-access.png") );
+	auto page = new SimpleConfigurationPage( tr( "Internet Access" ), QStringLiteral("veyon-internet-access") );
 	page->addDescription( tr( "Teachers can pause the internet access of this computer. The local network (private address "
 							  "ranges) always stays available so Veyon keeps working." ) );
 	page->addStringList( m_configuration.alwaysAllowedProperty(),

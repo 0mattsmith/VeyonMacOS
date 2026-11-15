@@ -7,8 +7,8 @@
    <string>Power down</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="powercontrol.qrc">
-    <normaloff>:/powercontrol/system-shutdown.png</normaloff>:/powercontrol/system-shutdown.png</iconset>
+   <iconset theme="veyon-power-down">
+    <normaloff>:/icons/veyon-modern/scalable/veyon-power-down.png</normaloff>:/icons/veyon-modern/scalable/veyon-power-down.png</iconset>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>

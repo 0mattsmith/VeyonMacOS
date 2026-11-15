@@ -2,25 +2,41 @@
     <qresource prefix="/master">
         <file>zoom-fit-best.png</file>
         <file>zoom-fit-best-dark.png</file>
-        <file>camera-photo.png</file>
         <file>host-offline.png</file>
         <file>host-online.png</file>
         <file>host-dns-error.png</file>
         <file>host-service-error.png</file>
         <file>host-access-denied.png</file>
         <file>splash.png</file>
-        <file>computers.png</file>
         <file>align-grid.png</file>
         <file>align-grid-dark.png</file>
         <file>exchange-positions-zorder.png</file>
         <file>exchange-positions-zorder-dark.png</file>
         <file>powered-on.png</file>
         <file>powered-on-dark.png</file>
-        <file>computer-slideshow.png</file>
-        <file>spotlight.png</file>
         <file>update-realtime-enabled.png</file>
         <file>update-realtime-enabled-dark.png</file>
         <file>update-realtime-disabled.png</file>
         <file>update-realtime-disabled-dark.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-modern">
+        <file alias="scalable/veyon-locations-computers.png">icons/modern/veyon-locations-computers.png</file>
+        <file alias="scalable/veyon-slideshow.png">icons/modern/veyon-slideshow.png</file>
+        <file alias="scalable/veyon-spotlight.png">icons/modern/veyon-spotlight.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-monochrome">
+        <file alias="scalable/veyon-locations-computers.png">icons/monochrome/veyon-locations-computers.png</file>
+        <file alias="scalable/veyon-slideshow.png">icons/monochrome/veyon-slideshow.png</file>
+        <file alias="scalable/veyon-spotlight.png">icons/monochrome/veyon-spotlight.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-monochrome-dark">
+        <file alias="scalable/veyon-locations-computers.png">icons/monochrome-dark/veyon-locations-computers.png</file>
+        <file alias="scalable/veyon-slideshow.png">icons/monochrome-dark/veyon-slideshow.png</file>
+        <file alias="scalable/veyon-spotlight.png">icons/monochrome-dark/veyon-spotlight.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-classic">
+        <file alias="scalable/veyon-locations-computers.png">icons/classic/veyon-locations-computers.png</file>
+        <file alias="scalable/veyon-slideshow.png">icons/classic/veyon-slideshow.png</file>
+        <file alias="scalable/veyon-spotlight.png">icons/classic/veyon-spotlight.png</file>
     </qresource>
 </RCC>

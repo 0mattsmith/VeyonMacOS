@@ -24,6 +24,7 @@
 
 #pragma once
 
+#include <QIcon>
 #include <QObject>
 #include <QtEndian>
 #include <QDebug>
@@ -101,6 +102,14 @@ public:
 		Dark
 	};
 	Q_ENUM(UiColorScheme)
+
+	//! \brief Icon set of the user interface, provided as icon themes (see addons/tools/make-icons.py)
+	enum class UiIconTheme {
+		Modern,
+		Monochrome,
+		Classic
+	};
+	Q_ENUM(UiIconTheme)
 
 	VeyonCore( QCoreApplication* application, Component component, const QString& appComponentName );
 	~VeyonCore() override;
@@ -182,6 +191,21 @@ public:
 	}
 
 	static bool useDarkMode();
+
+	//! \brief Returns the name of the icon theme for the configured icon set and colour scheme
+	static QString iconThemeName();
+
+	/*!
+	 * \brief Returns the icon of the configured icon set
+	 * \param name icon theme name (e.g. "veyon-remote-view"), or a file or resource path
+	 *
+	 * Icon theme names are looked up in the icon theme set up by VeyonCore::initUi(). When there is
+	 * no icon theme (e.g. in processes without a GUI), the icon of the default icon set is used.
+	 */
+	static QIcon icon( const QString& name );
+
+	//! \brief Activates the icon theme for the configured icon set and colour scheme
+	static void applyIconTheme();
 
 	static bool isDebugging();
 
