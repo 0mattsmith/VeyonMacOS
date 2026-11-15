@@ -48,7 +48,7 @@ ToolButton::ToolButton( const QIcon& icon,
 	setIcon(icon);
 	setText(label);
 	setAutoRaise(true);
-	setToolButtonStyle(Qt::ToolButtonStyle::ToolButtonTextUnderIcon);
+	updateStyle();
 
 	if (m_altLabel.length() > 0)
 	{
@@ -66,16 +66,25 @@ void ToolButton::setIconOnlyMode( QWidget* mainWindow, bool enabled )
 	const auto toolButtons = mainWindow->findChildren<ToolButton *>();
 	for( auto toolButton : toolButtons )
 	{
-		toolButton->setToolButtonStyle(enabled ? Qt::ToolButtonIconOnly : Qt::ToolButtonTextUnderIcon);
+		toolButton->updateStyle();
 	}
 }
 
 
 
-void ToolButton::addTo( QToolBar* toolBar )
+void ToolButton::setLabelStyle( Qt::ToolButtonStyle style )
+{
+	m_labelStyle = style;
+	updateStyle();
+}
+
+
+
+QAction* ToolButton::addTo( QToolBar* toolBar )
 {
 	auto action = toolBar->addWidget( this );
 	action->setText( m_label );
+	return action;
 }
 
 
@@ -89,9 +98,10 @@ void ToolButton::enterEvent( QEvent* event )
 	if (!s_toolTipsDisabled)
 	{
 		const auto pos = mapToGlobal(QPoint(width() / 2, height()));
-		if (s_iconOnlyMode || m_descr.isEmpty())
+		const auto label = m_toolTipLabel.isEmpty() ? text() : m_toolTipLabel;
+		if ((s_iconOnlyMode && label.isEmpty() == false) || m_descr.isEmpty())
 		{
-			QToolTip::showText(pos, text(), this);
+			QToolTip::showText(pos, label, this);
 		}
 		else
 		{
@@ -125,7 +135,19 @@ void ToolButton::mousePressEvent( QMouseEvent* event )
 QSize ToolButton::sizeHint() const
 {
 	const auto sh = QToolButton::sizeHint();
+	if (m_labelStyle != Qt::ToolButtonTextUnderIcon)
+	{
+		// compact buttons (e.g. stacked halves or drop-down arrows) keep their natural size
+		return sh;
+	}
 	return QSize(std::max<int>(sh.height() * 1.3, sh.width()), sh.height());
+}
+
+
+
+void ToolButton::updateStyle()
+{
+	setToolButtonStyle(s_iconOnlyMode ? Qt::ToolButtonIconOnly : m_labelStyle);
 }
 
 

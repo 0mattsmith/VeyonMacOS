@@ -59,6 +59,9 @@ void DocumentationFigureCreator::run()
 {
 	auto mainWindow = m_master.mainWindow();
 
+	// the figures show one button per feature
+	qobject_cast<MainWindow *>( mainWindow )->setFeatureGroupingEnabled( false );
+
 	mainWindow->move( 0, 0 );
 	mainWindow->resize( 3000, 1000 );
 	mainWindow->show();

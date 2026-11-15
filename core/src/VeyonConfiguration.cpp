@@ -55,7 +55,12 @@ void VeyonConfiguration::upgrade()
 		setAllowAddingHiddenLocations( legacyManualRoomAdditionAllowed() );
 		setHideEmptyLocations( legacyEmptyRoomsHidden() );
 		setAutoOpenComputerSelectPanel( legacyOpenComputerManagementAtStart() );
-		setConfirmUnsafeActions( legacyConfirmDangerousActions() );
+		// only migrate an explicitly configured legacy setting - otherwise keep the default (confirm)
+		if( hasValue( legacyConfirmDangerousActionsProperty().key(),
+					  legacyConfirmDangerousActionsProperty().parentKey() ) )
+		{
+			setConfirmUnsafeActions( legacyConfirmDangerousActions() );
+		}
 
 		setApplicationVersion( VeyonCore::ApplicationVersion::Version_4_2 );
 	}

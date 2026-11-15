@@ -60,7 +60,16 @@ public:
 		return s_toolTipsDisabled;
 	}
 
-	void addTo(QToolBar* toolBar);
+	// style used for this button while icon-only mode is disabled (default: text under icon)
+	void setLabelStyle( Qt::ToolButtonStyle style );
+
+	// text shown as tooltip in icon-only mode if the label is a shortened form
+	void setToolTipLabel( const QString& label )
+	{
+		m_toolTipLabel = label;
+	}
+
+	QAction* addTo(QToolBar* toolBar);
 
 protected:
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
@@ -74,6 +83,7 @@ protected:
 
 private:
 	bool checkForLeaveEvent();
+	void updateStyle();
 
 	static bool s_toolTipsDisabled;
 	static bool s_iconOnlyMode;
@@ -83,5 +93,8 @@ private:
 	QString m_label;
 	QString m_altLabel;
 	QString m_descr;
+	QString m_toolTipLabel;
+
+	Qt::ToolButtonStyle m_labelStyle{Qt::ToolButtonTextUnderIcon};
 
 } ;
