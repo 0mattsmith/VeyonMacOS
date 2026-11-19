@@ -76,7 +76,9 @@ public:
 
 	Plugin::Flags flags() const override
 	{
-		return Plugin::ProvidesDefaultImplementation;
+		// not the default any more: on current macOS versions Screen Sharing shows the login window instead of the
+		// user's session to connections authenticated with the VNC password only (see MacOsBuiltinVncServer)
+		return Plugin::NoFlags;
 	}
 
 	QStringList supportedSessionTypes() const override
