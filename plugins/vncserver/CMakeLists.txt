@@ -8,6 +8,7 @@ if(VEYON_BUILD_LINUX)
 endif()
 
 if(VEYON_BUILD_MACOS)
+	add_subdirectory(macos-builtin)
 	add_subdirectory(macos-screensharing)
 endif()
 
