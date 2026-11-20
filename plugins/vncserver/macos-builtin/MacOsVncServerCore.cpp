@@ -27,9 +27,9 @@ extern "C" {
 }
 
 #include <Accelerate/Accelerate.h>
+#include <CommonCrypto/CommonCryptor.h>
 #include <arpa/inet.h>
 
-#include <array>
 #include <chrono>
 #include <cstdlib>
 #include <cstring>
@@ -51,7 +51,47 @@ struct ServerState
 {
 	MacOsInputInjector injector;
 	int clientCount{0};
+	std::string password;
 };
+
+uint8_t reverseBits( uint8_t byte )
+{
+	uint8_t result = 0;
+	for( int i = 0; i < 8; ++i )
+	{
+		result = uint8_t( ( result << 1 ) | ( ( byte >> i ) & 1 ) );
+	}
+	return result;
+}
+
+// VNC authentication encrypts the challenge with DES using the password (bits of each byte reversed) as key.
+// LibVNCServer does this with OpenSSL, whose current versions (as bundled in Veyon.app) no longer provide DES by
+// default, so every password - even the correct one - would be rejected. CommonCrypto still provides DES.
+rfbBool checkPassword( rfbClientPtr client, const char* response, int length )
+{
+	auto state = static_cast<ServerState*>( client->screen->screenData );
+	if( length != CHALLENGESIZE || state->password.empty() )
+	{
+		return false;
+	}
+
+	uint8_t key[kCCKeySizeDES]{};
+	for( size_t i = 0; i < sizeof(key) && i < state->password.size(); ++i )
+	{
+		key[i] = reverseBits( uint8_t( state->password[i] ) );
+	}
+
+	uint8_t expected[CHALLENGESIZE]{};
+	size_t written = 0;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+	const auto status = CCCrypt( kCCEncrypt, kCCAlgorithmDES, kCCOptionECBMode, key, sizeof(key), nullptr,
+								 client->authChallenge, CHALLENGESIZE, expected, sizeof(expected), &written );
+#pragma clang diagnostic pop
+
+	return status == kCCSuccess && written == CHALLENGESIZE &&
+		   timingsafe_bcmp( expected, response, CHALLENGESIZE ) == 0;
+}
 
 void onPointerEvent( int buttonMask, int x, int y, rfbClientPtr client )
 {
@@ -129,13 +169,13 @@ bool MacOsVncServerCore::run( const Options& options )
 	}
 
 	ServerState state;
+	state.password = options.password;
 
-	std::array<char*, 2> passwords{ nullptr, nullptr };
 	if( options.password.empty() == false )
 	{
-		passwords[0] = strdup( options.password.c_str() );
-		screen->authPasswdData = passwords.data();
-		screen->passwordCheck = rfbCheckPasswordByList;
+		// LibVNCServer only offers VNC authentication if authPasswdData is set - checkPassword() doesn't use it
+		screen->authPasswdData = &state.password;
+		screen->passwordCheck = checkPassword;
 	}
 
 	screen->desktopName = "VeyonVNC";
@@ -250,7 +290,6 @@ bool MacOsVncServerCore::run( const Options& options )
 	free( screen->frameBuffer );
 	screen->frameBuffer = nullptr;
 	rfbScreenCleanup( screen );
-	free( passwords[0] );
 
 	return true;
 }
