@@ -34,6 +34,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <cmath>
 #include <cstring>
 #include <mutex>
 
@@ -44,6 +45,8 @@ namespace {
 
 constexpr int64_t StartTimeoutNanoseconds = 10 * NSEC_PER_SEC;
 constexpr int64_t StopTimeoutNanoseconds = 5 * NSEC_PER_SEC;
+// longer side of the captured picture in pixels at most
+constexpr double MaximumCaptureSize = 1920;
 // changes are detected in tiles of this size
 constexpr int TileSize = 32;
 // beyond this many dirty rectangles it is cheaper to update the whole frame
@@ -318,11 +321,31 @@ void MacOsScreenCapture::requestPermission()
 
 
 
-void MacOsScreenCapture::mainDisplaySize( int* width, int* height )
+static void captureSizeOfDisplay( CGDirectDisplayID display, int* width, int* height )
 {
-	const auto bounds = CGDisplayBounds( CGMainDisplayID() );
-	*width = int( bounds.size.width );
-	*height = int( bounds.size.height );
+	// the display's real resolution in pixels (twice the points on Retina displays), but no larger than
+	// MaximumCaptureSize on the longer side - enough for a full-screen picture on common classroom displays
+	// (1920 x 1200 for a 2880 x 1800 MacBook display) without the data of a full Retina resolution
+	const auto bounds = CGDisplayBounds( display );
+	double pixelWidth = bounds.size.width;
+	double pixelHeight = bounds.size.height;
+	if( auto mode = CGDisplayCopyDisplayMode( display ) )
+	{
+		pixelWidth = double( CGDisplayModeGetPixelWidth( mode ) );
+		pixelHeight = double( CGDisplayModeGetPixelHeight( mode ) );
+		CGDisplayModeRelease( mode );
+	}
+
+	const auto scale = std::min( 1.0, MaximumCaptureSize / std::max( pixelWidth, pixelHeight ) );
+	*width = int( std::lround( pixelWidth * scale / 2 ) * 2 );
+	*height = int( std::lround( pixelHeight * scale / 2 ) * 2 );
+}
+
+
+
+void MacOsScreenCapture::captureSize( int* width, int* height )
+{
+	captureSizeOfDisplay( CGMainDisplayID(), width, height );
 }
 
 
@@ -378,11 +401,13 @@ bool MacOsScreenCapture::start( int framesPerSecond )
 
 		SCContentFilter* filter = [[SCContentFilter alloc] initWithDisplay:mainDisplay excludingWindows:@[]];
 
+		int captureWidth = 0;
+		int captureHeight = 0;
+		captureSizeOfDisplay( mainDisplay.displayID, &captureWidth, &captureHeight );
+
 		SCStreamConfiguration* configuration = [[SCStreamConfiguration alloc] init];
-		// capture in points rather than in pixels: on Retina displays this is a quarter of the data, which is
-		// plenty for monitoring and remote control
-		configuration.width = size_t( mainDisplay.width );
-		configuration.height = size_t( mainDisplay.height );
+		configuration.width = size_t( captureWidth );
+		configuration.height = size_t( captureHeight );
 		configuration.pixelFormat = kCVPixelFormatType_32BGRA;
 		configuration.colorSpaceName = kCGColorSpaceSRGB;
 		configuration.minimumFrameInterval = CMTimeMake( 1, std::max( 1, framesPerSecond ) );

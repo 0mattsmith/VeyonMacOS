@@ -59,8 +59,8 @@ public:
 	// shows the system prompt (once per program) and adds the program to the list in System Settings
 	static void requestPermission();
 
-	// size of the main display in points (the capture size)
-	static void mainDisplaySize( int* width, int* height );
+	// size of the captured picture of the main display: its resolution in pixels, at most 1920 on the longer side
+	static void captureSize( int* width, int* height );
 
 	// starts capturing the main display (blocks until started or failed)
 	bool start( int framesPerSecond );

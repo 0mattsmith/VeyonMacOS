@@ -31,7 +31,7 @@ Screen Recording; a PPPC profile can at most allow standard users to approve it.
 
 ## Limitations
 
-- Only the main display is captured. It is captured in points, not pixels (1440×900 on a 2880×1800 Retina display).
+- Only the main display is captured, at its resolution in pixels but at most 1920 pixels on the longer side (1920×1200 on a 2880×1800 MacBook display): enough to fill a 1080p screen in demos without the data of a full Retina picture.
 - No picture while the session is locked or at the login window (ScreenCaptureKit only sees the user's session).
 - Keyboard input is mapped through the Mac's current keyboard layout. Characters the layout cannot type are sent as
   Unicode text, which works for typing but not for shortcuts.

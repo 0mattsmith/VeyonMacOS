@@ -154,7 +154,7 @@ bool MacOsVncServerCore::run( const Options& options )
 
 	int width = 0;
 	int height = 0;
-	MacOsScreenCapture::mainDisplaySize( &width, &height );
+	MacOsScreenCapture::captureSize( &width, &height );
 	if( width <= 0 || height <= 0 )
 	{
 		width = 1024;
@@ -251,7 +251,7 @@ bool MacOsVncServerCore::run( const Options& options )
 			// the capture size is fixed when the stream starts, so restart it after a resolution change
 			int displayWidth = 0;
 			int displayHeight = 0;
-			MacOsScreenCapture::mainDisplaySize( &displayWidth, &displayHeight );
+			MacOsScreenCapture::captureSize( &displayWidth, &displayHeight );
 			if( displayWidth > 0 && displayHeight > 0 &&
 				( displayWidth != screen->width || displayHeight != screen->height ) )
 			{
