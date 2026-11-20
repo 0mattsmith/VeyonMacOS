@@ -44,8 +44,10 @@ namespace {
 
 constexpr int64_t StartTimeoutNanoseconds = 10 * NSEC_PER_SEC;
 constexpr int64_t StopTimeoutNanoseconds = 5 * NSEC_PER_SEC;
-// beyond this many dirty rectangles per frame it is cheaper to update the whole frame
-constexpr size_t MaximumDirtyRects = 64;
+// changes are detected in tiles of this size
+constexpr int TileSize = 32;
+// beyond this many dirty rectangles it is cheaper to update the whole frame
+constexpr size_t MaximumDirtyRects = 512;
 
 }
 
@@ -81,6 +83,72 @@ struct MacOsScreenCapture::Private
 			return;
 		}
 		dirtyRects.push_back( rect );
+	}
+
+	void copyRect( const uint8_t* source, size_t sourceBytesPerRow, const Rect& rect )
+	{
+		const auto targetBytesPerRow = size_t(width) * 4;
+		for( int y = rect.y; y < rect.y + rect.height; ++y )
+		{
+			std::memcpy( pixels.data() + size_t(y) * targetBytesPerRow + size_t(rect.x) * 4,
+						 source + size_t(y) * sourceBytesPerRow + size_t(rect.x) * 4,
+						 size_t(rect.width) * 4 );
+		}
+	}
+
+	// ScreenCaptureKit reports whole window surfaces as dirty (e.g. an entire browser window for a blinking cursor),
+	// so compare the reported area tile by tile with the previous frame and only report tiles which really changed -
+	// otherwise every update would be close to a full screen, which e.g. exceeds the bandwidth limit of demos
+	void copyChangedTiles( const uint8_t* source, size_t sourceBytesPerRow, const Rect& rect )
+	{
+		const auto targetBytesPerRow = size_t(width) * 4;
+		const int right = rect.x + rect.width;
+		const int bottom = rect.y + rect.height;
+
+		for( int tileY = rect.y / TileSize * TileSize; tileY < bottom; tileY += TileSize )
+		{
+			const int tileHeight = std::min( TileSize, height - tileY );
+			int runStart = -1;
+			int runEnd = -1;
+
+			for( int tileX = rect.x / TileSize * TileSize; tileX < right; tileX += TileSize )
+			{
+				const int tileWidth = std::min( TileSize, width - tileX );
+				const auto rowBytes = size_t(tileWidth) * 4;
+
+				bool changed = false;
+				for( int y = tileY; y < tileY + tileHeight; ++y )
+				{
+					auto target = pixels.data() + size_t(y) * targetBytesPerRow + size_t(tileX) * 4;
+					const auto sourceRow = source + size_t(y) * sourceBytesPerRow + size_t(tileX) * 4;
+					if( changed || std::memcmp( target, sourceRow, rowBytes ) != 0 )
+					{
+						changed = true;
+						std::memcpy( target, sourceRow, rowBytes );
+					}
+				}
+
+				// merge horizontally adjacent changed tiles into one rectangle
+				if( changed )
+				{
+					if( runStart < 0 )
+					{
+						runStart = tileX;
+					}
+					runEnd = tileX + tileWidth;
+				}
+				else if( runStart >= 0 )
+				{
+					addDirtyRect( Rect{ runStart, tileY, runEnd - runStart, tileHeight } );
+					runStart = -1;
+				}
+			}
+
+			if( runStart >= 0 )
+			{
+				addDirtyRect( Rect{ runStart, tileY, runEnd - runStart, tileHeight } );
+			}
+		}
 	}
 
 	void storeFrame( CVPixelBufferRef pixelBuffer, NSArray* changedRects )
@@ -136,19 +204,22 @@ struct MacOsScreenCapture::Private
 				dirtyRects.clear();
 			}
 
-			const auto targetBytesPerRow = size_t(width) * 4;
-			for( const auto& rect : rects )
+			const auto dirtyRectsBefore = dirtyRects.size();
+
+			if( sizeChanged )
 			{
-				for( int y = rect.y; y < rect.y + rect.height; ++y )
+				copyRect( source, sourceBytesPerRow, rects.front() );
+				addDirtyRect( rects.front() );
+			}
+			else
+			{
+				for( const auto& rect : rects )
 				{
-					std::memcpy( pixels.data() + size_t(y) * targetBytesPerRow + size_t(rect.x) * 4,
-								 source + size_t(y) * sourceBytesPerRow + size_t(rect.x) * 4,
-								 size_t(rect.width) * 4 );
+					copyChangedTiles( source, sourceBytesPerRow, rect );
 				}
-				addDirtyRect( rect );
 			}
 
-			hasNewFrame = hasNewFrame || rects.empty() == false;
+			hasNewFrame = hasNewFrame || dirtyRects.size() != dirtyRectsBefore;
 		}
 
 		CVPixelBufferUnlockBaseAddress( pixelBuffer, kCVPixelBufferLock_ReadOnly );
