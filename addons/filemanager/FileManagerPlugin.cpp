@@ -505,7 +505,8 @@ FeatureMessage FileManagerPlugin::listDirectory( const FeatureMessage& request )
 			{ QStringLiteral("name"), fileInfo.fileName() },
 			{ QStringLiteral("dir"), fileInfo.isDir() },
 			{ QStringLiteral("size"), fileInfo.isDir() ? qint64(0) : fileInfo.size() },
-			{ QStringLiteral("modified"), fileInfo.lastModified() },
+			// as number: VariantStream only accepts a few types and drops messages containing a QDateTime
+			{ QStringLiteral("modified"), fileInfo.lastModified().toMSecsSinceEpoch() },
 			{ QStringLiteral("hidden"), fileInfo.isHidden() },
 		} );
 	}

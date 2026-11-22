@@ -396,7 +396,8 @@ void TaskManagerPlugin::enforceRules()
 			vDebug() << "terminated blocked application" << process.name << process.pid;
 
 			m_blockedApplications.prepend( QVariantMap{
-				{ QStringLiteral("time"), QDateTime::currentDateTime() },
+				// as number: VariantStream only accepts a few types and drops messages containing a QDateTime
+				{ QStringLiteral("time"), QDateTime::currentMSecsSinceEpoch() },
 				{ QStringLiteral("name"), process.displayName() },
 				{ QStringLiteral("path"), process.path },
 			} );
