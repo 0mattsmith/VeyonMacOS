@@ -180,7 +180,6 @@ QWidget* WebsiteFilterDialog::createRulesPanel()
 		modeLayout->addWidget( button );
 		connect( button, &QRadioButton::toggled, this, &WebsiteFilterDialog::updateOptions );
 	}
-	m_modeBlacklistButton->setChecked( true );
 	layout->addWidget( modeGroup );
 
 	auto websitesGroup = new QGroupBox( tr( "Websites" ) );
@@ -206,6 +205,9 @@ QWidget* WebsiteFilterDialog::createRulesPanel()
 	m_keepAfterRestartCheckBox = new QCheckBox( tr( "Keep rules active after the student computer has been restarted" ) );
 	optionsLayout->addWidget( m_keepAfterRestartCheckBox );
 	layout->addWidget( optionsGroup );
+
+	// only now: checking the button calls updateOptions(), which uses the widgets created above
+	m_modeBlacklistButton->setChecked( true );
 
 	auto actionLayout = new QHBoxLayout;
 	m_statusLabel = new QLabel;
