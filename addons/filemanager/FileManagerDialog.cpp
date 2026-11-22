@@ -24,6 +24,7 @@
 
 #include <QCheckBox>
 #include <QComboBox>
+#include <QDateTime>
 #include <QDesktopServices>
 #include <QDialogButtonBox>
 #include <QDirIterator>
@@ -650,7 +651,7 @@ void FileManagerDialog::renderListing()
 		const auto name = entry.value( QStringLiteral("name") ).toString();
 		const auto isDirectory = entry.value( QStringLiteral("dir") ).toBool();
 		const auto size = entry.value( QStringLiteral("size") ).toLongLong();
-		const auto modified = entry.value( QStringLiteral("modified") ).toDateTime();
+		const auto modified = QDateTime::fromMSecsSinceEpoch( entry.value( QStringLiteral("modified") ).toLongLong() );
 
 		auto item = new FileItem;
 		item->setText( ColumnName, name );

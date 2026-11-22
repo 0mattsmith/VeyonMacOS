@@ -25,6 +25,7 @@
 #include <QButtonGroup>
 #include <QCheckBox>
 #include <QComboBox>
+#include <QDateTime>
 #include <QDialogButtonBox>
 #include <QFormLayout>
 #include <QGroupBox>
@@ -646,7 +647,8 @@ void TaskManagerDialog::setRulesInUi( const ApplicationRules& rules )
 		for( const auto& entry : blockedApplications )
 		{
 			const auto map = entry.toMap();
-			auto item = new QTreeWidgetItem( { QLocale().toString( map.value( QStringLiteral("time") ).toDateTime().time(), QLocale::ShortFormat ),
+			auto item = new QTreeWidgetItem( { QLocale().toString( QDateTime::fromMSecsSinceEpoch( map.value( QStringLiteral("time") ).toLongLong() ).time(),
+																	QLocale::ShortFormat ),
 											   map.value( QStringLiteral("name") ).toString(),
 											   map.value( QStringLiteral("path") ).toString() } );
 			m_blockedTree->addTopLevelItem( item );
