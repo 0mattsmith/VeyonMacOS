@@ -42,6 +42,7 @@ private:
 	void updateMinimumSize();
 	void toggleToolTips();
 	void toggleIconMode();
+	void toggleFeatureGrouping();
 
 	void contextMenuEvent( QContextMenuEvent* event ) override;
 

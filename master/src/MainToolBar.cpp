@@ -112,6 +112,10 @@ void MainToolBar::contextMenuEvent( QContextMenuEvent* event )
 	iconModeAction->setCheckable( true );
 	iconModeAction->setChecked( m_mainWindow->masterCore().userConfig().toolButtonIconOnlyMode() );
 
+	auto groupingAction = menu.addAction( tr( "Group related features" ), this, &MainToolBar::toggleFeatureGrouping );
+	groupingAction->setCheckable( true );
+	groupingAction->setChecked( m_mainWindow->masterCore().userConfig().groupToolBarFeatures() );
+
 	menu.exec( event->globalPos() );
 }
 
@@ -133,4 +137,14 @@ void MainToolBar::toggleIconMode()
 
 	ToolButton::setIconOnlyMode( m_mainWindow, newToolButtonIconMode );
 	m_mainWindow->masterCore().userConfig().setToolButtonIconOnlyMode( newToolButtonIconMode );
+}
+
+
+
+void MainToolBar::toggleFeatureGrouping()
+{
+	const auto groupFeatures = !m_mainWindow->masterCore().userConfig().groupToolBarFeatures();
+
+	m_mainWindow->masterCore().userConfig().setGroupToolBarFeatures( groupFeatures );
+	m_mainWindow->setFeatureGroupingEnabled( groupFeatures );
 }
