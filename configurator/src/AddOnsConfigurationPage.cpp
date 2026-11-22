@@ -35,7 +35,7 @@ AddOnsConfigurationPage::AddOnsConfigurationPage( QWidget* parent ) :
 	ConfigurationPage( parent )
 {
 	setWindowTitle( tr( "Add-ons" ) );
-	setWindowIcon( QIcon( QStringLiteral(":/core/addon-store.png") ) );
+	setWindowIcon( VeyonCore::icon( QStringLiteral("veyon-addon-store") ) );
 
 	auto layout = new QVBoxLayout( this );
 

@@ -114,7 +114,7 @@ public:
 
 	QString addOnIconUrl() const override
 	{
-		return QStringLiteral(":/scriptedaddons/scripted-addons.png");
+		return QStringLiteral("veyon-scripted-addons");
 	}
 
 	QString addOnSummary() const override

@@ -280,7 +280,7 @@ void ComputerMonitoringWidget::populateFeatureMenu( const ComputerControlInterfa
 
 void ComputerMonitoringWidget::addFeatureToMenu( const Feature& feature, const QString& label )
 {
-	m_featureMenu->addAction(QIcon(feature.iconUrl()),
+	m_featureMenu->addAction(VeyonCore::icon( feature.iconUrl() ),
 							 label,
 							 this, [=, this] () { runFeature(feature); });
 }
@@ -289,11 +289,11 @@ void ComputerMonitoringWidget::addFeatureToMenu( const Feature& feature, const Q
 
 void ComputerMonitoringWidget::addSubFeaturesToMenu( const Feature& parentFeature, const FeatureList& subFeatures, const QString& label )
 {
-	auto menu = m_featureMenu->addMenu( QIcon( parentFeature.iconUrl() ), label );
+	auto menu = m_featureMenu->addMenu( VeyonCore::icon( parentFeature.iconUrl() ), label );
 
 	for( const auto& subFeature : subFeatures )
 	{
-		menu->addAction(QIcon(subFeature.iconUrl()), subFeature.displayName(),
+		menu->addAction(VeyonCore::icon( subFeature.iconUrl() ), subFeature.displayName(),
 				#if QT_VERSION >= QT_VERSION_CHECK(6, 3, 0)
 						subFeature.shortcut(),
 				#endif

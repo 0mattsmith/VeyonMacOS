@@ -1,6 +1,18 @@
 <RCC>
-    <qresource prefix="/usersessioncontrol">
-        <file>login-user.png</file>
-        <file>logout-user.png</file>
+    <qresource prefix="/icons/veyon-modern">
+        <file alias="scalable/veyon-log-in.png">icons/modern/veyon-log-in.png</file>
+        <file alias="scalable/veyon-log-off.png">icons/modern/veyon-log-off.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-monochrome">
+        <file alias="scalable/veyon-log-in.png">icons/monochrome/veyon-log-in.png</file>
+        <file alias="scalable/veyon-log-off.png">icons/monochrome/veyon-log-off.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-monochrome-dark">
+        <file alias="scalable/veyon-log-in.png">icons/monochrome-dark/veyon-log-in.png</file>
+        <file alias="scalable/veyon-log-off.png">icons/monochrome-dark/veyon-log-off.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-classic">
+        <file alias="scalable/veyon-log-in.png">icons/classic/veyon-log-in.png</file>
+        <file alias="scalable/veyon-log-off.png">icons/classic/veyon-log-off.png</file>
     </qresource>
 </RCC>

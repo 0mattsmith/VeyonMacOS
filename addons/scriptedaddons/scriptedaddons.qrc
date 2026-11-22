@@ -1,5 +1,14 @@
 <RCC>
-  <qresource prefix="/scriptedaddons">
-    <file alias="scripted-addons.png">resources/scripted-addons.png</file>
+  <qresource prefix="/icons/veyon-modern">
+    <file alias="scalable/veyon-scripted-addons.png">resources/icons/modern/veyon-scripted-addons.png</file>
+  </qresource>
+  <qresource prefix="/icons/veyon-monochrome">
+    <file alias="scalable/veyon-scripted-addons.png">resources/icons/monochrome/veyon-scripted-addons.png</file>
+  </qresource>
+  <qresource prefix="/icons/veyon-monochrome-dark">
+    <file alias="scalable/veyon-scripted-addons.png">resources/icons/monochrome-dark/veyon-scripted-addons.png</file>
+  </qresource>
+  <qresource prefix="/icons/veyon-classic">
+    <file alias="scalable/veyon-scripted-addons.png">resources/icons/classic/veyon-scripted-addons.png</file>
   </qresource>
 </RCC>

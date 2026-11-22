@@ -28,6 +28,7 @@
 #include "ComputerControlListModel.h"
 #include "ComputerItemDelegate.h"
 #include "FeatureManager.h"
+#include "VeyonCore.h"
 
 
 ComputerItemDelegate::ComputerItemDelegate(bool fullLengthLabels, QObject* parent) :
@@ -83,7 +84,7 @@ void ComputerItemDelegate::initFeaturePixmaps()
 	{
 		if (feature.testFlag(Feature::Flag::Master) && !feature.iconUrl().isEmpty())
 		{
-			m_featurePixmaps[feature.uid()] = QIcon(feature.iconUrl()).pixmap(QSize(OverlayIconSize, OverlayIconSize));
+			m_featurePixmaps[feature.uid()] = VeyonCore::icon( feature.iconUrl() ).pixmap(QSize(OverlayIconSize, OverlayIconSize));
 		}
 	}
 }

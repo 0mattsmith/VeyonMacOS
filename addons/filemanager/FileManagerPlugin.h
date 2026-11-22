@@ -136,7 +136,7 @@ public:
 
 	QString addOnIconUrl() const override
 	{
-		return QStringLiteral(":/filemanager/filemanager.png");
+		return QStringLiteral("veyon-file-manager");
 	}
 
 	QString addOnSummary() const override

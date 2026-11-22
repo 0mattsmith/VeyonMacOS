@@ -7,8 +7,8 @@
    <string>File transfer</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="filetransfer.qrc">
-    <normaloff>:/filetransfer/distribute-files.png</normaloff>:/filetransfer/distribute-files.png</iconset>
+   <iconset theme="veyon-file-transfer">
+    <normaloff>:/icons/veyon-modern/scalable/veyon-file-transfer.png</normaloff>:/icons/veyon-modern/scalable/veyon-file-transfer.png</iconset>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_3">
    <item>

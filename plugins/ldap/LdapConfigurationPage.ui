@@ -6,8 +6,8 @@
    <string notr="true">LDAP/AD</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="ldap.qrc">
-    <normaloff>:/ldap/application-x-kexi-connectiondata.png</normaloff>:/ldap/application-x-kexi-connectiondata.png</iconset>
+   <iconset theme="veyon-ldap">
+    <normaloff>:/icons/veyon-modern/scalable/veyon-ldap.png</normaloff>:/icons/veyon-modern/scalable/veyon-ldap.png</iconset>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_4">
    <property name="topMargin">

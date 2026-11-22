@@ -2,13 +2,33 @@
     <qresource prefix="/configurator">
         <file>veyon-configurator.png</file>
         <file>help-about.png</file>
-        <file>network-vpn.png</file>
-        <file>configure-shortcuts.png</file>
-        <file>application-x-ms-dos-executable.png</file>
-        <file>application-x-sharedlib.png</file>
         <file>vcs-conflicting.png</file>
         <file>vcs-normal.png</file>
         <file>vcs-removed.png</file>
         <file>access-rule-ask.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-modern">
+        <file alias="scalable/veyon-config-general.png">icons/modern/veyon-config-general.png</file>
+        <file alias="scalable/veyon-config-service.png">icons/modern/veyon-config-service.png</file>
+        <file alias="scalable/veyon-config-master.png">icons/modern/veyon-config-master.png</file>
+        <file alias="scalable/veyon-config-access-control.png">icons/modern/veyon-config-access-control.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-monochrome">
+        <file alias="scalable/veyon-config-general.png">icons/monochrome/veyon-config-general.png</file>
+        <file alias="scalable/veyon-config-service.png">icons/monochrome/veyon-config-service.png</file>
+        <file alias="scalable/veyon-config-master.png">icons/monochrome/veyon-config-master.png</file>
+        <file alias="scalable/veyon-config-access-control.png">icons/monochrome/veyon-config-access-control.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-monochrome-dark">
+        <file alias="scalable/veyon-config-general.png">icons/monochrome-dark/veyon-config-general.png</file>
+        <file alias="scalable/veyon-config-service.png">icons/monochrome-dark/veyon-config-service.png</file>
+        <file alias="scalable/veyon-config-master.png">icons/monochrome-dark/veyon-config-master.png</file>
+        <file alias="scalable/veyon-config-access-control.png">icons/monochrome-dark/veyon-config-access-control.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-classic">
+        <file alias="scalable/veyon-config-general.png">icons/classic/veyon-config-general.png</file>
+        <file alias="scalable/veyon-config-service.png">icons/classic/veyon-config-service.png</file>
+        <file alias="scalable/veyon-config-master.png">icons/classic/veyon-config-master.png</file>
+        <file alias="scalable/veyon-config-access-control.png">icons/classic/veyon-config-access-control.png</file>
     </qresource>
 </RCC>

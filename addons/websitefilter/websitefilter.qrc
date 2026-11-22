@@ -1,5 +1,14 @@
 <RCC>
-  <qresource prefix="/websitefilter">
-    <file alias="website-filter.png">resources/website-filter.png</file>
+  <qresource prefix="/icons/veyon-modern">
+    <file alias="scalable/veyon-website-filter.png">resources/icons/modern/veyon-website-filter.png</file>
+  </qresource>
+  <qresource prefix="/icons/veyon-monochrome">
+    <file alias="scalable/veyon-website-filter.png">resources/icons/monochrome/veyon-website-filter.png</file>
+  </qresource>
+  <qresource prefix="/icons/veyon-monochrome-dark">
+    <file alias="scalable/veyon-website-filter.png">resources/icons/monochrome-dark/veyon-website-filter.png</file>
+  </qresource>
+  <qresource prefix="/icons/veyon-classic">
+    <file alias="scalable/veyon-website-filter.png">resources/icons/classic/veyon-website-filter.png</file>
   </qresource>
 </RCC>

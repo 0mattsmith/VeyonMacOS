@@ -1,5 +1,14 @@
 <RCC>
-  <qresource prefix="/filesender">
-    <file alias="file-send.png">resources/file-send.png</file>
+  <qresource prefix="/icons/veyon-modern">
+    <file alias="scalable/veyon-file-send.png">resources/icons/modern/veyon-file-send.png</file>
+  </qresource>
+  <qresource prefix="/icons/veyon-monochrome">
+    <file alias="scalable/veyon-file-send.png">resources/icons/monochrome/veyon-file-send.png</file>
+  </qresource>
+  <qresource prefix="/icons/veyon-monochrome-dark">
+    <file alias="scalable/veyon-file-send.png">resources/icons/monochrome-dark/veyon-file-send.png</file>
+  </qresource>
+  <qresource prefix="/icons/veyon-classic">
+    <file alias="scalable/veyon-file-send.png">resources/icons/classic/veyon-file-send.png</file>
   </qresource>
 </RCC>

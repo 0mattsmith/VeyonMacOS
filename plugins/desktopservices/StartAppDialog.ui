@@ -7,8 +7,8 @@
    <string>Start application</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="desktopservices.qrc">
-    <normaloff>:/desktopservices/preferences-desktop-launch-feedback.png</normaloff>:/desktopservices/preferences-desktop-launch-feedback.png</iconset>
+   <iconset theme="veyon-start-app">
+    <normaloff>:/icons/veyon-modern/scalable/veyon-start-app.png</normaloff>:/icons/veyon-modern/scalable/veyon-start-app.png</iconset>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="6" column="0" colspan="2">

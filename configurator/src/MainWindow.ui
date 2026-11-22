@@ -48,8 +48,8 @@
         <string>General</string>
        </property>
        <property name="icon">
-        <iconset resource="../resources/configurator.qrc">
-         <normaloff>:/configurator/configure-shortcuts.png</normaloff>:/configurator/configure-shortcuts.png</iconset>
+        <iconset theme="veyon-config-general">
+         <normaloff>:/icons/veyon-modern/scalable/veyon-config-general.png</normaloff>:/icons/veyon-modern/scalable/veyon-config-general.png</iconset>
        </property>
        <property name="flags">
         <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
@@ -60,8 +60,8 @@
         <string>Service</string>
        </property>
        <property name="icon">
-        <iconset resource="../resources/configurator.qrc">
-         <normaloff>:/configurator/application-x-sharedlib.png</normaloff>:/configurator/application-x-sharedlib.png</iconset>
+        <iconset theme="veyon-config-service">
+         <normaloff>:/icons/veyon-modern/scalable/veyon-config-service.png</normaloff>:/icons/veyon-modern/scalable/veyon-config-service.png</iconset>
        </property>
        <property name="flags">
         <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
@@ -72,8 +72,8 @@
         <string>Master</string>
        </property>
        <property name="icon">
-        <iconset resource="../resources/configurator.qrc">
-         <normaloff>:/configurator/application-x-ms-dos-executable.png</normaloff>:/configurator/application-x-ms-dos-executable.png</iconset>
+        <iconset theme="veyon-config-master">
+         <normaloff>:/icons/veyon-modern/scalable/veyon-config-master.png</normaloff>:/icons/veyon-modern/scalable/veyon-config-master.png</iconset>
        </property>
        <property name="flags">
         <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
@@ -84,8 +84,8 @@
         <string>Access control</string>
        </property>
        <property name="icon">
-        <iconset resource="../resources/configurator.qrc">
-         <normaloff>:/configurator/network-vpn.png</normaloff>:/configurator/network-vpn.png</iconset>
+        <iconset theme="veyon-config-access-control">
+         <normaloff>:/icons/veyon-modern/scalable/veyon-config-access-control.png</normaloff>:/icons/veyon-modern/scalable/veyon-config-access-control.png</iconset>
        </property>
        <property name="flags">
         <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>

@@ -1,6 +1,17 @@
 <RCC>
     <qresource prefix="/screenlock" >
-        <file>system-lock-screen.png</file>
         <file>locked-screen-background.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-modern">
+        <file alias="scalable/veyon-screen-lock.png">icons/modern/veyon-screen-lock.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-monochrome">
+        <file alias="scalable/veyon-screen-lock.png">icons/monochrome/veyon-screen-lock.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-monochrome-dark">
+        <file alias="scalable/veyon-screen-lock.png">icons/monochrome-dark/veyon-screen-lock.png</file>
+    </qresource>
+    <qresource prefix="/icons/veyon-classic">
+        <file alias="scalable/veyon-screen-lock.png">icons/classic/veyon-screen-lock.png</file>
     </qresource>
 </RCC>

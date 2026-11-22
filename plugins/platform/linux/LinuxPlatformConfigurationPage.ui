@@ -6,8 +6,8 @@
    <string>Linux</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="linux.qrc">
-    <normaloff>:/linux/tux.png</normaloff>:/linux/tux.png</iconset>
+   <iconset theme="veyon-linux">
+    <normaloff>:/icons/veyon-modern/scalable/veyon-linux.png</normaloff>:/icons/veyon-modern/scalable/veyon-linux.png</iconset>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>

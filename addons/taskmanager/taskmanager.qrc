@@ -1,6 +1,18 @@
 <RCC>
-  <qresource prefix="/taskmanager">
-    <file alias="taskmanager.png">resources/taskmanager.png</file>
-    <file alias="application-control.png">resources/application-control.png</file>
+  <qresource prefix="/icons/veyon-modern">
+    <file alias="scalable/veyon-task-manager.png">resources/icons/modern/veyon-task-manager.png</file>
+    <file alias="scalable/veyon-application-control.png">resources/icons/modern/veyon-application-control.png</file>
+  </qresource>
+  <qresource prefix="/icons/veyon-monochrome">
+    <file alias="scalable/veyon-task-manager.png">resources/icons/monochrome/veyon-task-manager.png</file>
+    <file alias="scalable/veyon-application-control.png">resources/icons/monochrome/veyon-application-control.png</file>
+  </qresource>
+  <qresource prefix="/icons/veyon-monochrome-dark">
+    <file alias="scalable/veyon-task-manager.png">resources/icons/monochrome-dark/veyon-task-manager.png</file>
+    <file alias="scalable/veyon-application-control.png">resources/icons/monochrome-dark/veyon-application-control.png</file>
+  </qresource>
+  <qresource prefix="/icons/veyon-classic">
+    <file alias="scalable/veyon-task-manager.png">resources/icons/classic/veyon-task-manager.png</file>
+    <file alias="scalable/veyon-application-control.png">resources/icons/classic/veyon-application-control.png</file>
   </qresource>
 </RCC>

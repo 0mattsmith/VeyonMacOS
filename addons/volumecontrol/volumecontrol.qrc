@@ -1,7 +1,22 @@
 <RCC>
-  <qresource prefix="/volumecontrol">
-    <file alias="volume.png">resources/volume.png</file>
-    <file alias="volume-mute.png">resources/volume-mute.png</file>
-    <file alias="volume-lock.png">resources/volume-lock.png</file>
+  <qresource prefix="/icons/veyon-modern">
+    <file alias="scalable/veyon-volume.png">resources/icons/modern/veyon-volume.png</file>
+    <file alias="scalable/veyon-volume-mute.png">resources/icons/modern/veyon-volume-mute.png</file>
+    <file alias="scalable/veyon-volume-lock.png">resources/icons/modern/veyon-volume-lock.png</file>
+  </qresource>
+  <qresource prefix="/icons/veyon-monochrome">
+    <file alias="scalable/veyon-volume.png">resources/icons/monochrome/veyon-volume.png</file>
+    <file alias="scalable/veyon-volume-mute.png">resources/icons/monochrome/veyon-volume-mute.png</file>
+    <file alias="scalable/veyon-volume-lock.png">resources/icons/monochrome/veyon-volume-lock.png</file>
+  </qresource>
+  <qresource prefix="/icons/veyon-monochrome-dark">
+    <file alias="scalable/veyon-volume.png">resources/icons/monochrome-dark/veyon-volume.png</file>
+    <file alias="scalable/veyon-volume-mute.png">resources/icons/monochrome-dark/veyon-volume-mute.png</file>
+    <file alias="scalable/veyon-volume-lock.png">resources/icons/monochrome-dark/veyon-volume-lock.png</file>
+  </qresource>
+  <qresource prefix="/icons/veyon-classic">
+    <file alias="scalable/veyon-volume.png">resources/icons/classic/veyon-volume.png</file>
+    <file alias="scalable/veyon-volume-mute.png">resources/icons/classic/veyon-volume-mute.png</file>
+    <file alias="scalable/veyon-volume-lock.png">resources/icons/classic/veyon-volume-lock.png</file>
   </qresource>
 </RCC>
