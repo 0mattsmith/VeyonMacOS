@@ -145,6 +145,9 @@ fi
 
 
 echo "== Signing with identity \"$IDENTITY\""
+BUNDLE_ID="$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$APP/Contents/Info.plist")"
+
+# usage: sign <path> [entitlements] [identifier]
 sign()
 {
 	local options=(--force --sign "$IDENTITY")
@@ -156,6 +159,9 @@ sign()
 	fi
 	if [ -n "${2:-}" ] ; then
 		options+=(--entitlements "$2")
+	fi
+	if [ -n "${3:-}" ] ; then
+		options+=(--identifier "$3")
 	fi
 	codesign "${options[@]}" "$1"
 }
@@ -173,10 +179,13 @@ for framework in "$APP"/Contents/Frameworks/*.framework ; do
 	fi
 done
 
-# all programs except Veyon Master are located in Contents/Helpers (see MacOSBundle.cmake)
+# all programs except Veyon Master are located in Contents/Helpers (see MacOSBundle.cmake). They are signed with
+# the identifier of Veyon.app, so that with a certificate (not ad-hoc) they satisfy the app's designated requirement
+# and the privacy permissions granted to "Veyon" (Screen Recording, Accessibility) also cover veyon-server and
+# veyon-worker, which do the screen capture and input injection - and keep doing so after updates
 for executable in "$APP"/Contents/Helpers/* "$APP"/Contents/MacOS/* ; do
 	if [ -f "$executable" ] && [ "$(basename "$executable")" != "$MAIN_EXECUTABLE" ] && is_macho "$executable" ; then
-		sign "$executable" "$ENTITLEMENTS"
+		sign "$executable" "$ENTITLEMENTS" "$BUNDLE_ID"
 	fi
 done
 

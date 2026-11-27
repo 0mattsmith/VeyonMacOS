@@ -16,18 +16,25 @@ monitoring. That plugin is still available but no longer the default.
 
 ## Permissions
 
-macOS ties both permissions to the program's code signature, so with ad-hoc signed builds they have to be granted
-again after every update.
-
 | Permission | Needed for | Where |
 |---|---|---|
 | Screen & System Audio Recording | any picture at all | System Settings > Privacy & Security > Screen & System Audio Recording |
 | Accessibility | remote control (mouse and keyboard) | System Settings > Privacy & Security > Accessibility |
 
-The server asks for both once when it starts (the entries appear in the lists above) and logs a warning while one is
-missing. Without Screen Recording permission it keeps retrying every 5 seconds; macOS may only hand out the
-permission after `veyon-server` restarts (restart the Veyon Service). MDM can pre-approve Accessibility but not
-Screen Recording; a PPPC profile can at most allow standard users to approve it.
+macOS ties both permissions to the code signature:
+
+- **Signed with a certificate** (CI uses the `MACOS_CERTIFICATES_P12` secret, see HANDOVER.md): `deploy-bundle.sh`
+  signs the helpers with the identifier of Veyon.app, so the single "Veyon" entry in both lists covers
+  `veyon-server`, and the permissions survive updates signed with the same certificate.
+- **Ad-hoc signed** (local builds with `-DVEYON_MACOS_SIGNING_IDENTITY=-`): the designated requirement is the cdhash of
+  each file, so every build is a new program for macOS, and the "Veyon" entry does not cover the helpers. Drag
+  `/Applications/Veyon.app/Contents/Helpers/veyon-server` from Finder into both lists after every install.
+
+The server asks for missing permissions once per installed build (it remembers the build in
+`/Library/Application Support/Veyon/PermissionPromptState`) and otherwise only logs a warning. Without Screen
+Recording permission it keeps retrying every 5 seconds; macOS may only hand out the permission after `veyon-server`
+restarts (restart the Veyon Service). MDM can pre-approve Accessibility but not Screen Recording; a PPPC profile can
+at most allow standard users to approve it.
 
 ## Limitations
 

@@ -32,6 +32,8 @@ extern "C" {
 
 #include "MacOsBuiltinVncServer.h"
 #include "MacOsVncServerCore.h"
+#include "PlatformFilesystemFunctions.h"
+#include "PlatformPluginInterface.h"
 #include "VeyonCore.h"
 
 
@@ -65,6 +67,8 @@ bool MacOsBuiltinVncServer::runServer( int serverPort, const Password& password 
 	options.port = serverPort;
 	options.password = password.toByteArray().toStdString();
 	options.framesPerSecond = FramesPerSecond;
+	options.permissionPromptStateFile = QString( VeyonCore::platform().filesystemFunctions().globalAppDataPath() +
+												 QStringLiteral("/PermissionPromptState") ).toStdString();
 	options.log = []( MacOsVncServerCore::LogLevel level, const std::string& message ) {
 		const auto text = QString::fromStdString( message );
 		switch( level )

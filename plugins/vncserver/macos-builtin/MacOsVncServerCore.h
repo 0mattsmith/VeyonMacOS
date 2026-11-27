@@ -48,6 +48,9 @@ public:
 		std::string password; // empty: no authentication (for testing only)
 		bool localhostOnly{true};
 		int framesPerSecond{30};
+		// remembers that the system prompts for missing permissions have been shown for the installed build
+		// (empty: prompt on every start)
+		std::string permissionPromptStateFile;
 		Logger log;
 	};
 

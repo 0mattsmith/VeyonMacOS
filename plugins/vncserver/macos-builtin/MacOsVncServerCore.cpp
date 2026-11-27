@@ -29,10 +29,15 @@ extern "C" {
 #include <Accelerate/Accelerate.h>
 #include <CommonCrypto/CommonCryptor.h>
 #include <arpa/inet.h>
+#include <mach-o/dyld.h>
+#include <sys/stat.h>
 
 #include <chrono>
+#include <climits>
 #include <cstdlib>
 #include <cstring>
+#include <fstream>
+#include <string>
 
 #include "MacOsInputInjector.h"
 #include "MacOsScreenCapture.h"
@@ -125,6 +130,27 @@ rfbNewClientAction onNewClient( rfbClientPtr client )
 	return RFB_CLIENT_ACCEPT;
 }
 
+// identifies the installed build of the running program (modification time and size of the executable)
+std::string executableStamp()
+{
+	char path[PATH_MAX]{};
+	uint32_t size = sizeof(path);
+	struct stat info{};
+	if( _NSGetExecutablePath( path, &size ) != 0 || stat( path, &info ) != 0 )
+	{
+		return {};
+	}
+	return std::to_string( info.st_mtimespec.tv_sec ) + ":" + std::to_string( info.st_size );
+}
+
+std::string readFirstLine( const std::string& fileName )
+{
+	std::ifstream file( fileName );
+	std::string line;
+	std::getline( file, line );
+	return line;
+}
+
 // ScreenCaptureKit delivers BGRA, LibVNCServer's default format on little endian machines is RGBX
 void copyRect( const uint8_t* source, int sourceBytesPerRow, uint8_t* target, int targetBytesPerRow,
 			   const MacOsScreenCapture::Rect& rect )
@@ -200,18 +226,34 @@ bool MacOsVncServerCore::run( const Options& options )
 	screen->kbdAddEvent = onKeyEvent;
 	screen->newClientHook = onNewClient;
 
+	// the system prompts for missing permissions are shown once per installed build only - not on every start of the
+	// Veyon Service, which would otherwise ask again and again while a permission is denied
+	const auto buildStamp = executableStamp();
+	bool mayPrompt = options.permissionPromptStateFile.empty() ||
+					 readFirstLine( options.permissionPromptStateFile ) != buildStamp;
+	const auto rememberPrompt = [&]() {
+		if( mayPrompt && options.permissionPromptStateFile.empty() == false )
+		{
+			std::ofstream( options.permissionPromptStateFile, std::ios::trunc ) << buildStamp << '\n';
+		}
+		mayPrompt = false;
+	};
+
 	if( MacOsInputInjector::hasPermission() == false )
 	{
 		log( LogLevel::Warning, "the Accessibility permission is missing - remote control will not work until it is "
-								"granted in System Settings > Privacy & Security > Accessibility" );
-		MacOsInputInjector::requestPermission();
+								"granted to Veyon in System Settings > Privacy & Security > Accessibility" );
+		if( mayPrompt )
+		{
+			MacOsInputInjector::requestPermission();
+		}
 	}
 
 	MacOsScreenCapture capture;
 	auto nextCaptureStart = Clock::now();
 	auto nextDisplayCheck = Clock::now() + DisplayCheckInterval;
 	std::string reportedError;
-	bool permissionRequested = false;
+	bool screenRecordingPermissionReported = false;
 
 	m_stopRequested = false;
 
@@ -221,13 +263,17 @@ bool MacOsVncServerCore::run( const Options& options )
 
 		if( capture.isRunning() == false && now >= nextCaptureStart )
 		{
-			if( MacOsScreenCapture::hasPermission() == false && permissionRequested == false )
+			if( MacOsScreenCapture::hasPermission() == false && screenRecordingPermissionReported == false )
 			{
-				log( LogLevel::Warning, "the Screen Recording permission is missing - please grant it in System Settings "
-										"> Privacy & Security > Screen & System Audio Recording" );
-				MacOsScreenCapture::requestPermission();
-				permissionRequested = true;
+				log( LogLevel::Warning, "the Screen Recording permission is missing - please grant it to Veyon in System "
+										"Settings > Privacy & Security > Screen & System Audio Recording" );
+				if( mayPrompt )
+				{
+					MacOsScreenCapture::requestPermission();
+				}
+				screenRecordingPermissionReported = true;
 			}
+			rememberPrompt();
 
 			if( capture.start( options.framesPerSecond ) )
 			{
