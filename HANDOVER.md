@@ -59,7 +59,15 @@ cmake --build build --target macos-package
 
 - `-DVEYON_MACOS_SIGNING_IDENTITY=-` signs ad hoc. That is fine for testing, but macOS ties privacy permissions
   (Screen Recording, Accessibility, Full Disk Access) to the signature, so **every ad-hoc rebuild loses them** and
-  they must be granted again. A "Developer ID Application" identity avoids that; Matt may not have one.
+  they must be granted again (to `Contents/Helpers/veyon-server` itself, see `plugins/vncserver/macos-builtin/README.md`).
+- **CI signs with a self-signed certificate** since 2026-11-27: "Veyon Code Signing (Matt)", SHA-1
+  `7189E5689E133B8D9ABF2740179C1BB5D257532C`, valid until 2036, stored in the repository secrets
+  `MACOS_CERTIFICATES_P12`, `MACOS_CERTIFICATES_PASSWORD` and `MACOS_SIGNING_IDENTITY` (the SHA-1: `codesign`
+  only finds an untrusted identity by its hash). The backup (`.p12` and password) is in Matt's
+  `~/Documents/Veyon Signing`. Privacy permissions granted to "Veyon" therefore survive updates from CI. It is not an
+  Apple-trusted certificate: no notarization, Gatekeeper still warns when the package is opened from Finder. A
+  "Developer ID Application" identity (Apple Developer Program) would replace it through the same secrets. To sign a
+  local build the same way, import the `.p12` into a keychain and pass the SHA-1 as signing identity.
 - Outputs: `build/macos-staging/Veyon.app` (run in place for quick checks) and `build/macos-dist/*.pkg` and `.dmg`.
 - Install: `sudo installer -pkg build/macos-dist/*.pkg -target /`. This installs `/Applications/Veyon.app`,
   `/Applications/Veyon Configurator.app` and the LaunchDaemon `io.veyon.veyon-service`.
@@ -177,9 +185,9 @@ Matt also said he wants to **add more widget styles** after #13 and discuss that
    Master, does input blocking during screen lock work, can the worker write into `~/Desktop` or `~/Documents`
    (file transfer) without a prompt? A first-run check that names the missing permission and opens the right
    System Settings pane was proposed but not built.
-5. **Signing.** `security find-identity -v -p codesigning` shows whether a Developer ID exists on this Mac. The
-   CI workflow supports signing and notarization through secrets (`MACOS_CERTIFICATES_P12` etc.), but it is not
-   known whether they are set, so released packages may be ad-hoc signed.
+5. **Signing.** Answered: there was no Developer ID and no signing secret, so every CI package was ad-hoc signed and
+   lost its privacy permissions on each update. CI now signs with a self-signed certificate (see "Building on the
+   Mac"); a Developer ID is still needed for notarization.
 
 ## Planned but not started
 
